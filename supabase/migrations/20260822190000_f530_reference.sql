@@ -1,6 +1,6 @@
 create table if not exists public.reference_records (
  id text primary key,
- kind text not null check (kind in ('work','system','product_family','brand','product_reference','board','suspension','support','rule','quantity','source')),
+ kind text not null check (kind in ('work','system','product_family','brand','product','product_model','commercial_reference','product_reference','board','suspension','support','rule','quantity','source')),
  title text not null,
  summary text not null default '',
  source_page integer not null,

@@ -35,7 +35,7 @@ const fixingSystem = (
   id,kind:"fixing_system",title,
   summary:`${support} · plénum de ${min} à ${max} mm`,
   sourcePage:support==="Plancher bois horizontal"?2:3,status:"Publié",
-  data:{support,plenum_min_mm:min,plenum_max_mm:max,pare_vapeur_compatible:options.pareVapeur??false,max_insulation_kg_m2:options.maxInsulation??6,max_insulation_exclusive:options.maxExclusive??true,components},
+  data:{support,plenum_min_mm:min,plenum_max_mm:max,pare_vapeur_compatible:options.pareVapeur??false,max_insulation_kg_m2:options.maxInsulation??15,max_insulation_exclusive:options.maxExclusive??false,components},
 });
 
 const fixed = (name:string,quantity=1):FixingComponent => ({name,quantity,unit:"unité",calculation:"fixed"});

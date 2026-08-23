@@ -1,4 +1,4 @@
-export type RecordKind = "work" | "system" | "product_family" | "brand" | "product" | "product_model" | "commercial_reference" | "product_reference" | "board" | "suspension" | "support" | "supply_combination" | "rule" | "quantity" | "source";
+export type RecordKind = "work" | "system" | "product_family" | "supply_type" | "brand" | "product" | "product_model" | "commercial_reference" | "product_reference" | "board" | "suspension" | "support" | "supply_combination" | "rule" | "quantity" | "source";
 export type ReferenceRecord = { id:string; kind:RecordKind; title:string; summary:string; sourcePage:number; status:"Publié"|"À valider"; data:Record<string,string|number|boolean|null|string[]> };
 
 const boardNames = ["Placoplatre BA 6","Placoplatre BA 13","Placoplatre BA 15","Placoplatre BA 18","Placo Phonique","Placoflam","Lisaplac","4PRO","PlacoPremium","Placo Activ’Air","Lisaflam","Placo Multiconforts","Placo Infinaé"];
@@ -7,10 +7,10 @@ const suspensionProducts = [
 ];
 
 export const productTechnicalDefaults:Record<string,ReferenceRecord["data"]> = {
- "PRODUCT-SUSP-STIL-F530":{technical_record_id:"SUSP-CLM",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:20,reglage_max_mm:280,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
- "CATALOG-PRODUCT-SUSP-INTEGRA2":{technical_record_id:"SUSP-INTEGRA2",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:0,reglage_max_mm:300,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
- "CATALOG-PRODUCT-SUSP-SEC600":{technical_record_id:"SUSP-SEC600",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:80,reglage_max_mm:580,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
- "CATALOG-PRODUCT-SUSP-CLIPLAINE":{technical_record_id:"SUSP-CLIPLAINE",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"valeurs_discretes",reglage_min_mm:280,reglage_max_mm:370,reglages_mm:["280","370"],entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"}
+ "PRODUCT-SUSP-STIL-F530":{supply_type_id:"TYPE-SUSPENSION-SOLIVAGE",technical_record_id:"SUSP-CLM",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:20,reglage_max_mm:280,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
+ "CATALOG-PRODUCT-SUSP-INTEGRA2":{supply_type_id:"TYPE-SUSPENSION-SOLIVAGE",technical_record_id:"SUSP-INTEGRA2",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:0,reglage_max_mm:300,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
+ "CATALOG-PRODUCT-SUSP-SEC600":{supply_type_id:"TYPE-SUSPENSION-SOLIVAGE",technical_record_id:"SUSP-SEC600",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"continu",reglage_min_mm:80,reglage_max_mm:580,entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"},
+ "CATALOG-PRODUCT-SUSP-CLIPLAINE":{supply_type_id:"TYPE-SUSPENSION-SOLIVAGE",technical_record_id:"SUSP-CLIPLAINE",support_id:"SUP-BOIS-SOLIVAGE",reglage_mode:"valeurs_discretes",reglage_min_mm:280,reglage_max_mm:370,reglages_mm:["280","370"],entraxe_suspentes_m:1.2,fixation:"2 vis TTPC 35 par suspente"}
 };
 
 export const f530Records:ReferenceRecord[] = [
@@ -24,6 +24,7 @@ export const f530Records:ReferenceRecord[] = [
  {id:"FAMILY-TAPES",kind:"product_family",title:"Bandes à joint",summary:"Bandes pour le traitement des joints.",sourcePage:109,status:"Publié",data:{code:"bandes",unite_technique:"mètre linéaire"}},
  {id:"FAMILY-COMPOUNDS",kind:"product_family",title:"Enduits",summary:"Enduits en poudre ou prêts à l’emploi.",sourcePage:109,status:"Publié",data:{code:"enduits",unite_technique:"kg"}},
  {id:"FAMILY-INSULATION",kind:"product_family",title:"Isolants",summary:"Isolants en laine minérale posés sur l’ossature.",sourcePage:104,status:"Publié",data:{code:"isolants",unite_technique:"m²"}},
+ {id:"TYPE-SUSPENSION-SOLIVAGE",kind:"supply_type",title:"Suspentes pour solivage bois",summary:"Produits assurant la liaison réglable entre un solivage bois et les fourrures du plafond.",sourcePage:105,status:"Publié",data:{family_id:"FAMILY-SUSPENSIONS",code:"suspente-solivage-bois"}},
  {id:"BRAND-PLACO",kind:"brand",title:"Placo®",summary:"Marque des produits du système Placostil® F 530.",sourcePage:104,status:"Publié",data:{code:"placo"}},
  {id:"PRODUCT-SUSP-STIL-F530",kind:"product",title:"Suspente Stil® F 530",summary:"Famille de suspentes pour fourrures Stil® F 530 sur solivage bois.",sourcePage:105,status:"Publié",data:{family_id:"FAMILY-SUSPENSIONS",brand_id:"BRAND-PLACO",...productTechnicalDefaults["PRODUCT-SUSP-STIL-F530"]}},
  {id:"MODEL-SUSP-STIL-F530-COURTE",kind:"product_model",title:"Courte",summary:"Modèle court de la suspente Stil® F 530.",sourcePage:105,status:"À valider",data:{product_id:"PRODUCT-SUSP-STIL-F530",dimension_mm:null,reglage_min_mm:null,reglage_max_mm:null,technical_record_id:"SUSP-CLM"}},
@@ -72,4 +73,4 @@ export const f530Records:ReferenceRecord[] = [
  ...([0.4,0.5,0.6] as const).flatMap(spacing=>[1,2].map((layers):ReferenceRecord=>{const i=spacing===0.4?0:spacing===0.5?1:2;return {id:`QTY-${Math.round(spacing*100)}-${layers}L`,kind:"quantity",title:`Quantitatif ${layers===1?"simple":"double"} peau · entraxe ${Math.round(spacing*100)} cm`,summary:"Quantités indicatives pour 1 m², plafond de référence 8 × 10 m.",sourcePage:109,status:"Publié",data:{entraxe_fourrures_m:spacing,peaux:layers,plaque_m2:layers===1?1.05:2.10,fourrure_f530_ml:[2.52,2.10,1.79][i],rail_f530_ml:0.47,suspente_unite:[2.20,1.84,1.56][i],eclisse_unite:spacing===0.4?null:spacing===0.5?0.25:0.21,vis_premiere_peau_unite:layers===1?[20,17,15][i]:[13,11,10][i],vis_deuxieme_peau_unite:layers===2?[20,17,15][i]:null,bande_joint_ml:1.58,enduit_poudre_kg:0.37,enduit_pret_emploi_kg:0.53,entretoise_stil_flam_unite:spacing===0.6?1.68:null,base:"1 m² · plafond 8 × 10 m",note_enduit:"Poudre OU prêt à l’emploi",note_vis:"Longueur > épaisseur totale des plaques + 10 mm"}}}))
 ];
 
-export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",system:"Systèmes",product_family:"Familles",brand:"Marques",product:"Produits",product_model:"Modèles",commercial_reference:"Références commerciales",product_reference:"Anciennes références",board:"Plaques techniques",suspension:"Suspentes techniques",support:"Supports",supply_combination:"Combinaisons de fournitures",rule:"Règles",quantity:"Quantitatifs",source:"Sources"};
+export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",system:"Systèmes",product_family:"Familles",supply_type:"Types de fournitures",brand:"Marques",product:"Produits",product_model:"Modèles",commercial_reference:"Références commerciales",product_reference:"Anciennes références",board:"Plaques techniques",suspension:"Suspentes techniques",support:"Supports",supply_combination:"Combinaisons de fournitures",rule:"Règles",quantity:"Quantitatifs",source:"Sources"};

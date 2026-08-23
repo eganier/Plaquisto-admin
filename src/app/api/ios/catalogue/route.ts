@@ -12,5 +12,5 @@ export async function GET(){
  if(error)return NextResponse.json({error:error.message},{status:500});
  const records=(data||[]).map(row=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data,updatedAt:row.updated_at})) as (ReferenceRecord&{updatedAt:string})[];
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
- return NextResponse.json({version:"2.0",ouvrage:byKind("work")[0]??null,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),quantitatifs:byKind("quantity_item"),regles:byKind("rule")},{headers:{"Cache-Control":"no-store"}});
+ return NextResponse.json({version:"2.1",ouvrage:byKind("work")[0]??null,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),parements:byKind("facing"),quantitatifs:byKind("quantity_item"),regles:byKind("rule")},{headers:{"Cache-Control":"no-store"}});
 }

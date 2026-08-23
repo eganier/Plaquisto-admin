@@ -1,4 +1,4 @@
-export type RecordKind = "work" | "insulation_series" | "fixing_system" | "quantity_item" | "rule";
+export type RecordKind = "work" | "insulation_series" | "fixing_system" | "facing" | "quantity_item" | "rule";
 export type RecordStatus = "Publié" | "À valider";
 export type ReferenceRecord = {
   id: string;
@@ -12,6 +12,7 @@ export type ReferenceRecord = {
 
 export type InsulationPoint = {thickness_mm:number;max_weight_kg_m2:number};
 export type FixingComponent = {name:string;quantity:number;unit:"unité"|"ml";calculation:"fixed"|"plenum_m"};
+export type FacingDimension = {width_mm:number;length_mm:number};
 
 const insulationSeries = (
   id:string,
@@ -54,6 +55,11 @@ const looseThicknesses=[40,60,80,100,120,140,160,180,200,220,240,260,280,300,320
 export const plaquistoRecords:ReferenceRecord[]=[
   {id:"WORK-PLAFOND-FOURRURE-HORIZONTAL",kind:"work",title:"Plafond sur fourrures horizontal",summary:"Ouvrage de plafond suspendu sur fourrures F45. La configuration détermine l’isolant, le système de fixation et les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"plafond-fourrure-horizontal",fourrure:"F45",source:"Plaquisto_Tableaux_Plafond_fourrure horizontal.numbers"}},
 
+  {id:"FACING-A",kind:"facing",title:"Parement A",summary:"Type provisoire à compléter dans Plaquisto Admin.",sourcePage:0,status:"Publié",data:{code:"A",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
+  {id:"FACING-B",kind:"facing",title:"Parement B",summary:"Type provisoire à compléter dans Plaquisto Admin.",sourcePage:0,status:"Publié",data:{code:"B",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
+  {id:"FACING-C",kind:"facing",title:"Parement C",summary:"Type provisoire à compléter dans Plaquisto Admin.",sourcePage:0,status:"Publié",data:{code:"C",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
+  {id:"FACING-D",kind:"facing",title:"Parement D",summary:"Type provisoire à compléter dans Plaquisto Admin.",sourcePage:0,status:"Publié",data:{code:"D",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
+
   insulationSeries("ISO-VERRE-040","Laine de verre · λ 0,040","Laine de verre","λ ≈ 0,040","≈ 12 kg/m³",glassThicknesses,[0.54,0.72,0.96,1.20,1.44,1.68,1.92,2.40,2.88,3.60]),
   insulationSeries("ISO-VERRE-035","Laine de verre · λ 0,035","Laine de verre","λ ≈ 0,035","≈ 15-20 kg/m³",glassThicknesses,[0.90,1.20,1.60,2.00,2.40,2.80,3.20,4.00,4.80,6.00]),
   insulationSeries("ISO-VERRE-032","Laine de verre · λ 0,032","Laine de verre","λ ≈ 0,032","≈ 20-30 kg/m³",glassThicknesses,[1.35,1.80,2.40,3.00,3.60,4.20,4.80,6.00,7.20,9.00]),
@@ -92,4 +98,4 @@ export const plaquistoRecords:ReferenceRecord[]=[
   {id:"RULE-ROD-LENGTH",kind:"rule",title:"Calcul des tiges filetées",summary:"Les tiges filetées sont calculées en mètres linéaires.",sourcePage:3,status:"Publié",data:{formula:"nombre_systemes × plenum_mm / 1000",unit:"ml"}},
 ];
 
-export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation",quantity_item:"Quantitatifs",rule:"Règles de calcul"};
+export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};

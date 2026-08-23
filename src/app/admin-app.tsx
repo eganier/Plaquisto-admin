@@ -35,6 +35,43 @@ function Supplies({records,onSelect,onCreate}:{records:ReferenceRecord[];onSelec
  const addBrand=()=>createAndOpen({id:`BRAND-${crypto.randomUUID().slice(0,8).toUpperCase()}`,kind:"brand",title:"Nouvelle marque",summary:"Marque à compléter.",sourcePage:104,status:"À valider",data:{code:null}});
  const addProduct=()=>{const brandId=brandFilter==="all"?brands[0]?.id:brandFilter;if(!typeId||!brandId)return;void createAndOpen({id:`PRODUCT-${crypto.randomUUID().slice(0,8).toUpperCase()}`,kind:"product",title:"Nouveau produit",summary:"Produit à compléter.",sourcePage:104,status:"À valider",data:{family_id:familyId,supply_type_id:typeId,brand_id:brandId}})};
  const addModel=()=>{if(!productId)return;void createAndOpen({id:`MODEL-${crypto.randomUUID().slice(0,8).toUpperCase()}`,kind:"product_model",title:"Nouveau modèle",summary:"Modèle à compléter.",sourcePage:105,status:"À valider",data:{product_id:productId,reglage_min_mm:null,reglage_max_mm:null}})};
+ useEffect(()=>{
+  const grid=document.querySelector<HTMLElement>(".catalog-grid.four-levels");
+  if(!grid)return;
+  const columns=grid.querySelectorAll<HTMLElement>(":scope > .catalog-column");
+  const typeRows=columns[1]?.querySelectorAll<HTMLElement>(".catalog-product-row")||[];
+  const productRows=columns[2]?.querySelectorAll<HTMLElement>(".catalog-product-row")||[];
+  const cleanups:(()=>void)[]=[];
+  productRows.forEach((element,index)=>{
+   const product=visibleProducts[index];
+   if(!product)return;
+   element.draggable=true;
+   element.title="Glissez ce produit vers un type de fourniture";
+   const start=(event:DragEvent)=>{event.dataTransfer?.setData("text/plain",product.id);if(event.dataTransfer)event.dataTransfer.effectAllowed="move";element.classList.add("dragging")};
+   const end=()=>{element.classList.remove("dragging");typeRows.forEach(row=>row.classList.remove("drop-target"))};
+   element.addEventListener("dragstart",start);element.addEventListener("dragend",end);
+   cleanups.push(()=>{element.removeEventListener("dragstart",start);element.removeEventListener("dragend",end);element.draggable=false;element.removeAttribute("title")});
+  });
+  typeRows.forEach((element,index)=>{
+   const targetType=visibleTypes[index];
+   if(!targetType)return;
+   const over=(event:DragEvent)=>{event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect="move";element.classList.add("drop-target")};
+   const leave=()=>element.classList.remove("drop-target");
+   const drop=async(event:DragEvent)=>{
+    event.preventDefault();element.classList.remove("drop-target");
+    const draggedId=event.dataTransfer?.getData("text/plain");
+    const product=products.find(item=>item.id===draggedId);
+    if(!product||product.data.supply_type_id===targetType.id)return;
+    const next={...product,data:{...product.data,supply_type_id:targetType.id,family_id:targetType.data.family_id}};
+    const response=await fetch("/api/records",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(next)});
+    if(!response.ok){window.alert("Déplacement impossible. Réessayez après avoir actualisé la page.");return}
+    window.location.reload();
+   };
+   element.addEventListener("dragover",over);element.addEventListener("dragleave",leave);element.addEventListener("drop",drop);
+   cleanups.push(()=>{element.removeEventListener("dragover",over);element.removeEventListener("dragleave",leave);element.removeEventListener("drop",drop)});
+  });
+  return ()=>cleanups.forEach(cleanup=>cleanup());
+ },[products,visibleProducts,visibleTypes]);
  return <section className="page"><div className="title"><div><small>CATALOGUE FOURNITURES</small><h1>Familles, types, produits et modèles</h1><p>Le besoin technique est défini avant la marque. Les produits compatibles peuvent ensuite être filtrés par marque.</p></div><span className="badge green">{models.length} modèles</span></div><div className="brand-toolbar"><div><small>MARQUES DU CATALOGUE</small><span className="brand-links">{brands.length===0?<strong>Aucune marque</strong>:brands.map(brand=><button key={brand.id} onClick={()=>onSelect(brand)}>{brand.title} · Fiche</button>)}</span></div><label>Afficher<select value={brandFilter} onChange={e=>chooseBrandFilter(e.target.value)}><option value="all">Toutes les marques</option>{brands.map(brand=><option value={brand.id} key={brand.id}>{brand.title}</option>)}</select></label><button className="primary" onClick={addBrand}>+ Ajouter une marque</button></div><div className="catalog-grid four-levels"><article className="catalog-column"><header><small>1 · FAMILLES</small><button className="column-add" onClick={addFamily}>+ Ajouter</button><strong>{families.length}</strong></header>{families.map(f=><div key={f.id} className={`catalog-product-row ${familyId===f.id?"selected":""}`}><button className="product-choice" onClick={()=>chooseFamily(f.id)}><span><b>{f.title}</b><small>{types.filter(r=>r.data.family_id===f.id).length} type(s)</small></span><i>›</i></button><button className="open-product" onClick={()=>onSelect(f)}>Fiche</button></div>)}</article><article className="catalog-column"><header><small>2 · TYPES DE FOURNITURES</small><button className="column-add" disabled={!familyId} onClick={addType}>+ Ajouter</button><strong>{visibleTypes.length}</strong></header>{visibleTypes.length===0?<p className="catalog-empty">Aucun type défini pour cette famille.</p>:visibleTypes.map(type=><div key={type.id} className={`catalog-product-row ${typeId===type.id?"selected":""}`}><button className="product-choice" onClick={()=>chooseType(type.id)}><span><b>{type.title}</b><small>{products.filter(r=>r.data.supply_type_id===type.id).length} produit(s), toutes marques</small></span><i>›</i></button><button className="open-product" onClick={()=>onSelect(type)}>Fiche</button></div>)}</article><article className="catalog-column"><header><small>3 · PRODUITS COMPATIBLES</small><button className="column-add" disabled={!typeId||brands.length===0} onClick={addProduct}>+ Ajouter</button><strong>{visibleProducts.length}</strong></header>{visibleProducts.length===0?<p className="catalog-empty">Aucun produit compatible pour ce type et ce filtre de marque.</p>:visibleProducts.map(p=>{const brand=brands.find(b=>b.id===p.data.brand_id);return <div key={p.id} className={`catalog-product-row ${productId===p.id?"selected":""}`}><button className="product-choice" onClick={()=>setProductId(p.id)}><span><b>{p.title}</b><small>{brand?.title||"Marque à renseigner"} · {models.filter(r=>r.data.product_id===p.id).length} modèle(s)</small></span><i>›</i></button><button className="open-product" onClick={()=>onSelect(p)}>Fiche</button></div>})}</article><article className="catalog-column"><header><small>4 · MODÈLES</small><button className="column-add" disabled={!productId} onClick={addModel}>+ Ajouter</button><strong>{visibleModels.length}</strong></header>{visibleModels.length===0?<p className="catalog-empty">Aucun modèle pour ce produit.</p>:visibleModels.map(m=><button key={m.id} onClick={()=>onSelect(m)}><span><b>{m.title}</b><small>{modelAdjustmentLabel(m)}</small></span><i>›</i></button>)}</article></div></section>
 }
 function List({title,records,query,setQuery,onSelect}:{title:string;records:ReferenceRecord[];query:string;setQuery:(s:string)=>void;onSelect:(r:ReferenceRecord)=>void}){return <section className="page"><div className="title"><div><small>PLAFONDS STIL® F 530</small><h1>{title}</h1><p>Données techniques structurées et modifiables.</p></div><span className="badge green">{records.length} fiches</span></div><div className="tools"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Rechercher une donnée…"/><span>Cliquez sur une ligne pour la modifier</span></div><div className="table"><table><thead><tr><th>Donnée</th><th>Valeurs principales</th><th>Source</th><th>Statut</th><th/></tr></thead><tbody>{records.map(r=><tr key={r.id} onClick={()=>onSelect(r)}><td><strong>{r.title}</strong><small>{r.id}</small></td><td><span className="row-summary">{r.summary}</span></td><td>Page {r.sourcePage}</td><td><span className={`badge ${r.status==="Publié"?"green":"gold"}`}>{r.status}</span></td><td>›</td></tr>)}</tbody></table></div></section>}

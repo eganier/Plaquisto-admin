@@ -1,39 +1,26 @@
 import {NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
-import {f530Records} from "@/lib/f530-data";
+import {plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
+
 const ADMIN="e.ganier@gmail.com";
 async function auth(){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();return {supabase,ok:user?.email?.toLowerCase()===ADMIN}}
+const toRow=(record:ReferenceRecord)=>({id:record.id,kind:record.kind,title:record.title,summary:record.summary,source_page:record.sourcePage,status:record.status,data:record.data,updated_at:new Date().toISOString()});
+const fromRow=(row:{id:string;kind:ReferenceRecord["kind"];title:string;summary:string;source_page:number;status:ReferenceRecord["status"];data:ReferenceRecord["data"]}):ReferenceRecord=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data});
+
 export async function GET(){
  const {supabase,ok}=await auth();
  if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});
  const {data,error}=await supabase.from("reference_records").select("*").order("kind").order("title");
- if(error)return NextResponse.json({records:f530Records,storage:"local"});
- const toRow=(r:(typeof f530Records)[number])=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data,updated_at:new Date().toISOString()});
+ if(error)return NextResponse.json({error:error.message},{status:500});
  if(!data.length){
-  const {error:seedError}=await supabase.from("reference_records").insert(f530Records.map(toRow));
-  if(seedError)return NextResponse.json({records:f530Records,storage:"local"});
-  return NextResponse.json({records:f530Records,storage:"supabase"});
+  const {error:seedError}=await supabase.from("reference_records").insert(plaquistoRecords.map(toRow));
+  if(seedError)return NextResponse.json({error:seedError.message},{status:500});
+  return NextResponse.json({records:plaquistoRecords,storage:"supabase"});
  }
-
- let available=data;
- const missingStructuredRecords=f530Records.filter(seed=>["supply_type","supply_combination"].includes(seed.kind)&&!available.some(row=>row.id===seed.id));
- if(missingStructuredRecords.length){
-  const rows=missingStructuredRecords.map(toRow);
-  await supabase.from("reference_records").insert(rows);
-  available=[...available,...rows];
- }
- const systemSeed=f530Records.find(seed=>seed.id==="F530-SYSTEM"),systemRow=available.find(row=>row.id==="F530-SYSTEM");
- if(systemSeed&&systemRow){
-  const mergedData={...systemSeed.data,...systemRow.data};
-  const requiredKeys=["questions_actives","fournitures_toujours","fournitures_selon_configuration"];
-  if(requiredKeys.some(key=>systemRow.data?.[key]===undefined)){
-   await supabase.from("reference_records").update({data:mergedData,updated_at:new Date().toISOString()}).eq("id","F530-SYSTEM");
-   available=available.map(row=>row.id==="F530-SYSTEM"?{...row,data:mergedData}:row);
-  }
- }
- return NextResponse.json({records:available.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,sourcePage:r.source_page,status:r.status,data:r.data})),storage:"supabase"});
+ return NextResponse.json({records:data.map(fromRow),storage:"supabase"});
 }
-export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const rows=f530Records.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data,updated_at:new Date().toISOString()}));const {error}=await supabase.from("reference_records").upsert(rows);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:rows.length})}
-export async function PATCH(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const r=await request.json();const {error}=await supabase.from("reference_records").update({title:r.title,summary:r.summary,status:r.status,data:r.data,updated_at:new Date().toISOString()}).eq("id",r.id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}
-export async function PUT(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const r=await request.json();const {error}=await supabase.from("reference_records").insert({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data});if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({record:r})}
-export async function DELETE(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {id}=await request.json();if(typeof id!=="string")return NextResponse.json({error:"Identifiant invalide"},{status:400});const {data:target,error:lookupError}=await supabase.from("reference_records").select("kind").eq("id",id).maybeSingle();if(lookupError||!target||!["commercial_reference","product_model","product"].includes(target.kind))return NextResponse.json({error:"Élément introuvable"},{status:404});if(target.kind==="product"){const {data:models,error:modelsLookupError}=await supabase.from("reference_records").select("id").eq("kind","product_model").eq("data->>product_id",id);if(modelsLookupError)return NextResponse.json({error:modelsLookupError.message},{status:400});const modelIds=(models||[]).map(model=>model.id);if(modelIds.length){const {error:referencesError}=await supabase.from("reference_records").delete().eq("kind","commercial_reference").in("data->>model_id",modelIds);if(referencesError)return NextResponse.json({error:referencesError.message},{status:400});const {error:modelsError}=await supabase.from("reference_records").delete().eq("kind","product_model").in("id",modelIds);if(modelsError)return NextResponse.json({error:modelsError.message},{status:400})}}if(target.kind==="product_model"){const {error:referencesError}=await supabase.from("reference_records").delete().eq("kind","commercial_reference").eq("data->>model_id",id);if(referencesError)return NextResponse.json({error:referencesError.message},{status:400})}const {error}=await supabase.from("reference_records").delete().eq("id",id).eq("kind",target.kind);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}
+
+export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {error}=await supabase.from("reference_records").upsert(plaquistoRecords.map(toRow));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:plaquistoRecords.length})}
+export async function PATCH(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const record=await request.json() as ReferenceRecord;const {error}=await supabase.from("reference_records").update({title:record.title,summary:record.summary,status:record.status,data:record.data,updated_at:new Date().toISOString()}).eq("id",record.id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}
+export async function PUT(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const record=await request.json() as ReferenceRecord;const {error}=await supabase.from("reference_records").insert(toRow(record));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({record})}
+export async function DELETE(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {id}=await request.json() as {id?:string};if(!id)return NextResponse.json({error:"Identifiant invalide"},{status:400});const {error}=await supabase.from("reference_records").delete().eq("id",id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}

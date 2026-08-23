@@ -1,9 +1,49 @@
 import {NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
 import {f530Records,productTechnicalDefaults} from "@/lib/f530-data";
+import {suspensionCatalogBootstrapIds} from "@/lib/suspension-catalog";
 const ADMIN="e.ganier@gmail.com";
 async function auth(){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();return {supabase,ok:user?.email?.toLowerCase()===ADMIN}}
-export async function GET(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {data,error}=await supabase.from("reference_records").select("*").order("kind").order("title");if(error)return NextResponse.json({records:f530Records,storage:"local"});if(!data.length){const rows=f530Records.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data}));const {error:seedError}=await supabase.from("reference_records").insert(rows);if(seedError)return NextResponse.json({records:f530Records,storage:"local"});return NextResponse.json({records:f530Records,storage:"supabase"})}const missingTypes=f530Records.filter(seed=>seed.kind==="supply_type"&&!data.some(row=>row.id===seed.id));if(missingTypes.length){await supabase.from("reference_records").insert(missingTypes.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data})))}const available=[...data,...missingTypes.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data}))];const normalized=await Promise.all(available.map(async row=>{const defaults=productTechnicalDefaults[row.id];if(row.kind==="product"&&defaults&&Object.keys(defaults).some(key=>!(key in row.data))){const merged={...defaults,...row.data};await supabase.from("reference_records").update({data:merged,updated_at:new Date().toISOString()}).eq("id",row.id);return {...row,data:merged}}return row}));return NextResponse.json({records:normalized.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,sourcePage:r.source_page,status:r.status,data:r.data})),storage:"supabase"})}
+export async function GET(){
+ const {supabase,ok}=await auth();
+ if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});
+ const {data,error}=await supabase.from("reference_records").select("*").order("kind").order("title");
+ if(error)return NextResponse.json({records:f530Records,storage:"local"});
+ const toRow=(r:(typeof f530Records)[number])=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data,updated_at:new Date().toISOString()});
+ if(!data.length){
+  const {error:seedError}=await supabase.from("reference_records").insert(f530Records.map(toRow));
+  if(seedError)return NextResponse.json({records:f530Records,storage:"local"});
+  return NextResponse.json({records:f530Records,storage:"supabase"});
+ }
+
+ let available=data;
+ const catalogAlreadyImported=data.some(row=>row.id==="SOURCE-SUSPENSION-CATALOG-2026");
+ if(!catalogAlreadyImported){
+  const catalogRows=f530Records.filter(record=>suspensionCatalogBootstrapIds.has(record.id)).map(toRow);
+  const {error:catalogError}=await supabase.from("reference_records").upsert(catalogRows);
+  if(!catalogError){
+   const importedIds=new Set(catalogRows.map(row=>row.id));
+   available=[...data.filter(row=>!importedIds.has(row.id)),...catalogRows];
+  }
+ }
+
+ const missingTypes=f530Records.filter(seed=>seed.kind==="supply_type"&&!available.some(row=>row.id===seed.id));
+ if(missingTypes.length){
+  const rows=missingTypes.map(toRow);
+  await supabase.from("reference_records").insert(rows);
+  available=[...available,...rows];
+ }
+ const normalized=await Promise.all(available.map(async row=>{
+  const defaults=productTechnicalDefaults[row.id];
+  if(row.kind==="product"&&defaults&&Object.keys(defaults).some(key=>!(key in row.data))){
+   const merged={...defaults,...row.data};
+   await supabase.from("reference_records").update({data:merged,updated_at:new Date().toISOString()}).eq("id",row.id);
+   return {...row,data:merged};
+  }
+  return row;
+ }));
+ return NextResponse.json({records:normalized.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,sourcePage:r.source_page,status:r.status,data:r.data})),storage:"supabase"});
+}
 export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const rows=f530Records.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data,updated_at:new Date().toISOString()}));const {error}=await supabase.from("reference_records").upsert(rows);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:rows.length})}
 export async function PATCH(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const r=await request.json();const {error}=await supabase.from("reference_records").update({title:r.title,summary:r.summary,status:r.status,data:r.data,updated_at:new Date().toISOString()}).eq("id",r.id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}
 export async function PUT(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const r=await request.json();const {error}=await supabase.from("reference_records").insert({id:r.id,kind:r.kind,title:r.title,summary:r.summary,source_page:r.sourcePage,status:r.status,data:r.data});if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({record:r})}

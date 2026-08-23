@@ -16,11 +16,20 @@ export async function GET(){
  }
 
  let available=data;
- const missingTypes=f530Records.filter(seed=>seed.kind==="supply_type"&&!available.some(row=>row.id===seed.id));
- if(missingTypes.length){
-  const rows=missingTypes.map(toRow);
+ const missingStructuredRecords=f530Records.filter(seed=>["supply_type","supply_combination"].includes(seed.kind)&&!available.some(row=>row.id===seed.id));
+ if(missingStructuredRecords.length){
+  const rows=missingStructuredRecords.map(toRow);
   await supabase.from("reference_records").insert(rows);
   available=[...available,...rows];
+ }
+ const systemSeed=f530Records.find(seed=>seed.id==="F530-SYSTEM"),systemRow=available.find(row=>row.id==="F530-SYSTEM");
+ if(systemSeed&&systemRow){
+  const mergedData={...systemSeed.data,...systemRow.data};
+  const requiredKeys=["questions_actives","fournitures_toujours","fournitures_selon_configuration"];
+  if(requiredKeys.some(key=>systemRow.data?.[key]===undefined)){
+   await supabase.from("reference_records").update({data:mergedData,updated_at:new Date().toISOString()}).eq("id","F530-SYSTEM");
+   available=available.map(row=>row.id==="F530-SYSTEM"?{...row,data:mergedData}:row);
+  }
  }
  return NextResponse.json({records:available.map(r=>({id:r.id,kind:r.kind,title:r.title,summary:r.summary,sourcePage:r.source_page,status:r.status,data:r.data})),storage:"supabase"});
 }

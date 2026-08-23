@@ -1,6 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
-import type {ReferenceRecord} from "@/lib/plaquisto-data";
+import {plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
 export const dynamic="force-dynamic";
 
@@ -12,5 +12,7 @@ export async function GET(){
  if(error)return NextResponse.json({error:error.message},{status:500});
  const records=(data||[]).map(row=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data,updatedAt:row.updated_at})) as (ReferenceRecord&{updatedAt:string})[];
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
- return NextResponse.json({version:"2.1",ouvrage:byKind("work")[0]??null,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),parements:byKind("facing"),quantitatifs:byKind("quantity_item"),regles:byKind("rule")},{headers:{"Cache-Control":"no-store"}});
+ const quantityItems=byKind("quantity_item"),vaporBarrier=quantityItems.filter(record=>record.data.category==="vapor_barrier");
+ const defaultVaporBarrier=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="quantity_item"&&record.data.category==="vapor_barrier");
+ return NextResponse.json({version:"2.2",ouvrage:byKind("work")[0]??null,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),parements:byKind("facing"),quantitatifs:quantityItems.filter(record=>record.data.category!=="vapor_barrier"),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,regles:byKind("rule")},{headers:{"Cache-Control":"no-store"}});
 }

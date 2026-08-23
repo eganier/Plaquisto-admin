@@ -17,7 +17,13 @@ export async function GET(){
   if(seedError)return NextResponse.json({error:seedError.message},{status:500});
   return NextResponse.json({records:plaquistoRecords,storage:"supabase"});
  }
- return NextResponse.json({records:data.map(fromRow),storage:"supabase"});
+ const existingIds=new Set(data.map(row=>row.id));
+ const missing=plaquistoRecords.filter(record=>!existingIds.has(record.id));
+ if(missing.length){
+  const {error:seedError}=await supabase.from("reference_records").insert(missing.map(toRow));
+  if(seedError)return NextResponse.json({error:seedError.message},{status:500});
+ }
+ return NextResponse.json({records:[...data.map(fromRow),...missing],storage:"supabase"});
 }
 
 export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {error}=await supabase.from("reference_records").upsert(plaquistoRecords.map(toRow));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:plaquistoRecords.length})}

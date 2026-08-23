@@ -13,6 +13,13 @@ export type ReferenceRecord = {
 export type InsulationPoint = {thickness_mm:number;max_weight_kg_m2:number};
 export type FixingComponent = {name:string;quantity:number;unit:"unité"|"ml";calculation:"fixed"|"plenum_m"};
 export type FacingDimension = {width_mm:number;length_mm:number};
+export type VaporBarrierComponent = {
+  name:string;
+  quantity:number;
+  unit:"unité"|"ml"|"m²";
+  calculation:"area"|"fourrure_ml";
+  exclude_when_system_handles_vapor_barrier?:boolean;
+};
 
 const insulationSeries = (
   id:string,
@@ -93,6 +100,13 @@ export const plaquistoRecords:ReferenceRecord[]=[
   quantityItem("QTY-BANDE","Bande PP grand rouleau","ml",[1.58,1.58,1.58,1.58,1.58,1.58]),
   quantityItem("QTY-ENDUIT-POUDRE","Enduit poudre collage, charge, finition","kg",[0.37,0.37,0.37,0.37,0.37,0.37]),
   quantityItem("QTY-ENDUIT-PATE","Enduit pâte prêt à l’emploi, collage, charge, finition","kg",[0.53,0.53,0.53,0.53,0.53,0.53]),
+
+  {id:"VAPOR-BARRIER-QUANTITIES",kind:"quantity_item",title:"Fournitures pour pare-vapeur",summary:"Fournitures ajoutées au quantitatif lorsque l’utilisateur prévoit un pare-vapeur.",sourcePage:5,status:"Publié",data:{category:"vapor_barrier",components:[
+    {name:"Pare-vapeur",quantity:1.3,unit:"m²",calculation:"area"},
+    {name:"Scotch d’étanchéité",quantity:1.3,unit:"ml",calculation:"area"},
+    {name:"Mastic d’étanchéité",quantity:0.03,unit:"unité",calculation:"area"},
+    {name:"Scotch double-face",quantity:1,unit:"ml",calculation:"fourrure_ml",exclude_when_system_handles_vapor_barrier:true},
+  ]}},
 
   {id:"RULE-ISOLATION-SPACING",kind:"rule",title:"Entraxe selon le poids de l’isolant",summary:"La valeur maximale de la plage de poids est toujours retenue.",sourcePage:2,status:"Publié",data:{weight_policy:"maximum",bands:[{min_kg_m2:0,max_kg_m2:6,max_exclusive:true,spacing_m:0.6},{min_kg_m2:6,max_kg_m2:10,max_exclusive:true,spacing_m:0.5},{min_kg_m2:10,max_kg_m2:15,max_exclusive:false,spacing_m:0.4}]}},
   {id:"RULE-ROD-LENGTH",kind:"rule",title:"Calcul des tiges filetées",summary:"Les tiges filetées sont calculées en mètres linéaires.",sourcePage:3,status:"Publié",data:{formula:"nombre_systemes × plenum_mm / 1000",unit:"ml"}},

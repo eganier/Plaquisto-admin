@@ -19,12 +19,30 @@ export async function GET(){
  let available=data;
  const catalogAlreadyImported=data.some(row=>row.id==="SOURCE-SUSPENSION-CATALOG-2026");
  if(!catalogAlreadyImported){
-  const catalogRows=f530Records.filter(record=>suspensionCatalogBootstrapIds.has(record.id)).map(toRow);
-  const {error:catalogError}=await supabase.from("reference_records").upsert(catalogRows);
-  if(!catalogError){
-   const importedIds=new Set(catalogRows.map(row=>row.id));
-   available=[...data.filter(row=>!importedIds.has(row.id)),...catalogRows];
+  const markerId="SOURCE-SUSPENSION-CATALOG-2026";
+  const catalogRows=f530Records.filter(record=>suspensionCatalogBootstrapIds.has(record.id)&&record.id!==markerId).map(toRow);
+  const importedRows:ReturnType<typeof toRow>[]=[];
+  let catalogErrorMessage="";
+  for(let index=0;index<catalogRows.length;index+=20){
+   const batch=catalogRows.slice(index,index+20);
+   const {error:catalogError}=await supabase.from("reference_records").upsert(batch);
+   if(catalogError){catalogErrorMessage=catalogError.message;console.error("Suspension catalog import failed",catalogError);break}
+   importedRows.push(...batch);
   }
+  if(!catalogErrorMessage){
+   const marker=f530Records.find(record=>record.id===markerId);
+   if(marker){
+    const markerRow=toRow(marker);
+    const {error:markerError}=await supabase.from("reference_records").upsert(markerRow);
+    if(markerError){catalogErrorMessage=markerError.message;console.error("Suspension catalog marker failed",markerError)}
+    else importedRows.push(markerRow);
+   }
+  }
+  if(importedRows.length){
+   const importedIds=new Set(importedRows.map(row=>row.id));
+   available=[...data.filter(row=>!importedIds.has(row.id)),...importedRows];
+  }
+  if(catalogErrorMessage)return NextResponse.json({records:f530Records,storage:"supabase",catalogImportError:catalogErrorMessage});
  }
 
  const missingTypes=f530Records.filter(seed=>seed.kind==="supply_type"&&!available.some(row=>row.id===seed.id));

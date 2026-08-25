@@ -112,4 +112,4 @@ export const plaquistoRecords:ReferenceRecord[]=[
   {id:"RULE-ROD-LENGTH",kind:"rule",title:"Calcul des tiges filetées",summary:"Les tiges filetées sont calculées en mètres linéaires.",sourcePage:3,status:"Publié",data:{formula:"nombre_systemes × plenum_mm / 1000",unit:"ml"}},
 ];
 
-export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};
+export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation de plafond sur fourrures",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};

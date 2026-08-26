@@ -14,5 +14,19 @@ export async function GET(){
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
  const quantityItems=byKind("quantity_item"),vaporBarrier=quantityItems.filter(record=>record.data.category==="vapor_barrier");
  const defaultVaporBarrier=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="quantity_item"&&record.data.category==="vapor_barrier");
- return NextResponse.json({version:"2.2",ouvrage:byKind("work")[0]??null,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),parements:byKind("facing"),quantitatifs:quantityItems.filter(record=>record.data.category!=="vapor_barrier"),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,regles:byKind("rule")},{headers:{"Cache-Control":"no-store"}});
+ const seed=(id:string)=>plaquistoRecords.find(record=>record.id===id&&record.status==="Publié")??null;
+ const works=byKind("work"),facings=byKind("facing"),rules=byKind("rule");
+ const ceilingWork=works.find(record=>record.data.code==="plafond-fourrure-horizontal")??seed("WORK-PLAFOND-FOURRURE-HORIZONTAL");
+ const doublageWork=works.find(record=>record.data.code==="doublage-peripherique-rails-montants")??seed("WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS");
+ const doublageFacings=facings.filter(record=>record.data.work_code==="doublage-peripherique-rails-montants");
+ const defaultDoublageFacings=plaquistoRecords.filter(record=>record.kind==="facing"&&record.status==="Publié"&&record.data.work_code==="doublage-peripherique-rails-montants");
+ const doublagePerformance=rules.find(record=>record.data.category==="doublage_performance")??seed("RULE-DOUBLAGE-HEIGHTS");
+ const doublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity")??seed("QTY-DOUBLAGE-RAILS-MONTANTS");
+ return NextResponse.json({
+  version:"2.3",ouvrage:ceilingWork,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),
+  parements:facings.filter(record=>record.data.work_code!=="doublage-peripherique-rails-montants"),
+  quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
+  regles:rules.filter(record=>record.data.category!=="doublage_performance"),
+  doublage:{ouvrage:doublageWork,parements:doublageFacings.length?doublageFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity},
+ },{headers:{"Cache-Control":"no-store"}});
 }

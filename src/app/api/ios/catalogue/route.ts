@@ -1,6 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
-import {plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
+import {genericFacingRecords,legacyCeilingFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
 export const dynamic="force-dynamic";
 
@@ -18,13 +18,14 @@ export async function GET(){
  const works=byKind("work"),facings=byKind("facing"),rules=byKind("rule");
  const ceilingWork=works.find(record=>record.data.code==="plafond-fourrure-horizontal")??seed("WORK-PLAFOND-FOURRURE-HORIZONTAL");
  const doublageWork=works.find(record=>record.data.code==="doublage-peripherique-rails-montants")??seed("WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS");
- const doublageFacings=facings.filter(record=>record.data.work_code==="doublage-peripherique-rails-montants");
- const defaultDoublageFacings=plaquistoRecords.filter(record=>record.kind==="facing"&&record.status==="Publié"&&record.data.work_code==="doublage-peripherique-rails-montants");
- const doublagePerformance=rules.find(record=>record.data.category==="doublage_performance")??seed("RULE-DOUBLAGE-HEIGHTS");
+ const doublageFacings=facings.filter(record=>record.data.catalog_schema_version===2);
+ const defaultDoublageFacings=genericFacingRecords.filter(record=>record.status==="Publié");
+ const storedDoublagePerformance=rules.find(record=>record.data.category==="doublage_performance");
+ const doublagePerformance=storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS");
  const doublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity")??seed("QTY-DOUBLAGE-RAILS-MONTANTS");
  return NextResponse.json({
-  version:"2.3",ouvrage:ceilingWork,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),
-  parements:facings.filter(record=>record.data.work_code!=="doublage-peripherique-rails-montants"),
+  version:"3.0",ouvrage:ceilingWork,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),
+  parements:legacyCeilingFacingRecords,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:rules.filter(record=>record.data.category!=="doublage_performance"),
   doublage:{ouvrage:doublageWork,parements:doublageFacings.length?doublageFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity},

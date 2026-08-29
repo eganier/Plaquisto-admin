@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
-import {plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
+import {genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
 const ADMIN="e.ganier@gmail.com";
 async function auth(){const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();return {supabase,ok:user?.email?.toLowerCase()===ADMIN}}
@@ -17,13 +17,24 @@ export async function GET(){
   if(seedError)return NextResponse.json({error:seedError.message},{status:500});
   return NextResponse.json({records:plaquistoRecords,storage:"supabase"});
  }
- const existingIds=new Set(data.map(row=>row.id));
+ let current=data;
+ const legacyFacings=current.filter(row=>row.kind==="facing"&&row.data?.catalog_schema_version!==2);
+ if(legacyFacings.length){
+  const {error:deleteError}=await supabase.from("reference_records").delete().eq("kind","facing");
+  if(deleteError)return NextResponse.json({error:deleteError.message},{status:500});
+  const performanceRule=plaquistoRecords.find(record=>record.id==="RULE-DOUBLAGE-HEIGHTS");
+  const migrationRecords=performanceRule?[...genericFacingRecords,performanceRule]:genericFacingRecords;
+  const {error:migrationError}=await supabase.from("reference_records").upsert(migrationRecords.map(toRow));
+  if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
+  current=[...current.filter(row=>row.kind!=="facing"&&row.id!=="RULE-DOUBLAGE-HEIGHTS"),...migrationRecords.map(toRow)];
+ }
+ const existingIds=new Set(current.map(row=>row.id));
  const missing=plaquistoRecords.filter(record=>!existingIds.has(record.id));
  if(missing.length){
   const {error:seedError}=await supabase.from("reference_records").insert(missing.map(toRow));
   if(seedError)return NextResponse.json({error:seedError.message},{status:500});
  }
- return NextResponse.json({records:[...data.map(fromRow),...missing],storage:"supabase"});
+ return NextResponse.json({records:[...current.map(fromRow),...missing],storage:"supabase"});
 }
 
 export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {error}=await supabase.from("reference_records").upsert(plaquistoRecords.map(toRow));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:plaquistoRecords.length})}

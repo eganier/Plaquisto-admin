@@ -81,13 +81,6 @@ export const genericFacingRecords:ReferenceRecord[]=[
  ...["BA13","BA15","BA18","BA25"].flatMap(family=>commonVariants.map(feature=>facing(family,feature))),
  facing("BA13","haute_durete"),facing("BA13","quatre_bords_amincis"),facing("BA13","tres_haute_resistance_eau"),
 ];
-export const legacyCeilingFacingRecords:ReferenceRecord[]=[
- {id:"FACING-A",kind:"facing",title:"Parement A",summary:"Parement provisoire du configurateur de plafond.",sourcePage:0,status:"Publié",data:{code:"A",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
- {id:"FACING-B",kind:"facing",title:"Parement B",summary:"Parement provisoire du configurateur de plafond.",sourcePage:0,status:"Publié",data:{code:"B",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
- {id:"FACING-C",kind:"facing",title:"Parement C",summary:"Parement provisoire du configurateur de plafond.",sourcePage:0,status:"Publié",data:{code:"C",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
- {id:"FACING-D",kind:"facing",title:"Parement D",summary:"Parement provisoire du configurateur de plafond.",sourcePage:0,status:"Publié",data:{code:"D",dimensions:[{width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2800},{width_mm:1200,length_mm:3000}]}},
-];
-
 const doublageFrames=["R36 + M36","R48 + M48","R48 + M48-50","R62 + M62","R70 + M70","R90 + M90","R100 + M100"];
 const heights=(spacing_m:number,simple:number[],double:number[])=>doublageFrames.map((frame,index)=>({frame,spacing_m,simple_m:simple[index],double_m:double[index]}));
 const doublagePerformanceGroups=[

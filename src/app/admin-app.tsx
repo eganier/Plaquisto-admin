@@ -88,7 +88,7 @@ function SimpleList({records,onSelect}:{records:ReferenceRecord[];onSelect:(reco
 function RecordEditor({record,onBack,onSave,onDelete}:{record:ReferenceRecord;onBack:()=>void;onSave:(record:ReferenceRecord)=>Promise<void>;onDelete:(id:string)=>Promise<void>}){
  const [draft,setDraft]=useState(record),[message,setMessage]=useState("");
  const change=(next:ReferenceRecord)=>{setDraft(next);setMessage("")};
- const setData=(key:string,value:unknown)=>change({...draft,data:{...draft.data,[key]:value}});
+ const setData=(key:string,value:unknown)=>{setDraft(current=>({...current,data:{...current.data,[key]:value}}));setMessage("")};
  const save=async()=>{try{await onSave(draft);setMessage("Informations enregistrées.")}catch{setMessage("Enregistrement impossible.")}};
  const remove=async()=>{if(!window.confirm("Supprimer définitivement cette fiche ?"))return;try{await onDelete(record.id)}catch{setMessage("Suppression impossible.")}};
  const isStructuredQuantity=draft.kind==="quantity_item"&&draft.data.category==="doublage_quantity";

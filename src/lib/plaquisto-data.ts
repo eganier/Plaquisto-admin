@@ -44,7 +44,7 @@ const wallInsulationSeries = (
   id,kind:"insulation_series",title,
   summary:`${code} · λ de ${lambdas[0].toFixed(3).replace(".",",")} à ${lambdas.at(-1)!.toFixed(3).replace(".",",")} W/(m·K)`,
   sourcePage,status:"Publié",
-  data:{category:"wall_insulation",schema_version:1,code,material:title,lambda_min_w_mk:lambdas[0],lambda_max_w_mk:lambdas.at(-1),compatible_work_codes:["doublage-peripherique-rails-montants"],lambdas:lambdas.map(lambda_w_mk=>({lambda_w_mk,thicknesses_mm:thicknesses}))},
+  data:{category:"wall_insulation",schema_version:1,code,material:title,compatible_work_codes:["doublage-peripherique-rails-montants"],lambdas:lambdas.map(lambda_w_mk=>({lambda_w_mk,thicknesses_mm:thicknesses}))},
 });
 
 const fixingSystem = (

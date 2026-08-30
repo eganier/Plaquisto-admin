@@ -11,6 +11,7 @@ export type ReferenceRecord = {
 };
 
 export type InsulationPoint = {thickness_mm:number;max_weight_kg_m2:number};
+export type WallInsulationLambda = {lambda_w_mk:number;thicknesses_mm:number[]};
 export type FixingComponent = {name:string;quantity:number;unit:"unité"|"ml";calculation:"fixed"|"plenum_m"};
 export type FacingDimension = {width_mm:number;length_mm:number};
 export type FacingFunction = "standard"|"hydrofuge"|"incendie"|"phonique"|"haute_durete"|"quatre_bords_amincis"|"tres_haute_resistance_eau";
@@ -35,6 +36,15 @@ const insulationSeries = (
   summary:`${material} · ${conductivity} · ${density}`,
   sourcePage:1,status:"Publié",
   data:{material,conductivity,density,weight_policy:"maximum",values:thicknesses.map((thickness_mm,index)=>({thickness_mm,max_weight_kg_m2:weights[index]}))},
+});
+
+const wallInsulationSeries = (
+  id:string,code:string,title:string,lambdas:number[],thicknesses:number[],sourcePage:number,
+):ReferenceRecord => ({
+  id,kind:"insulation_series",title,
+  summary:`${code} · λ de ${lambdas[0].toFixed(3).replace(".",",")} à ${lambdas.at(-1)!.toFixed(3).replace(".",",")} W/(m·K)`,
+  sourcePage,status:"Publié",
+  data:{category:"wall_insulation",schema_version:1,code,material:title,lambda_min_w_mk:lambdas[0],lambda_max_w_mk:lambdas.at(-1),compatible_work_codes:["doublage-peripherique-rails-montants"],lambdas:lambdas.map(lambda_w_mk=>({lambda_w_mk,thicknesses_mm:thicknesses}))},
 });
 
 const fixingSystem = (
@@ -115,6 +125,11 @@ export const plaquistoRecords:ReferenceRecord[]=[
   insulationSeries("ISO-CELLULOSE","Ouate de cellulose","Ouate de cellulose","Non renseignée","32 kg/m³",looseThicknesses,[1.12,1.68,2.24,2.80,3.36,3.92,4.48,5.04,5.60,6.16,6.72,7.28,7.84,8.40,8.96,9.80,11.20]),
   insulationSeries("ISO-BIOSOURCE","Biosourcé · chanvre, lin, canton","Biosourcé (chanvre, lin, canton)","Non renseignée","32 kg/m³",looseThicknesses,[1.20,1.80,2.40,3.00,3.60,4.20,4.80,5.40,6.00,6.60,7.20,7.80,8.40,9.00,9.60,10.50,12.00]),
 
+  wallInsulationSeries("WALL-INSULATION-LDV","LDV","Laine de verre",[0.030,0.031,0.032,0.033,0.034,0.035,0.036,0.037,0.038,0.039,0.040],[45,60,75,85,100,120,140,160],1),
+  wallInsulationSeries("WALL-INSULATION-LDR","LDR","Laine de roche",[0.032,0.033,0.034,0.035],[40,45,60,75,100,120,130,140,160,180,200],2),
+  wallInsulationSeries("WALL-INSULATION-LDB","LDB","Laine de bois",[0.036,0.037,0.038],[40,50,60,80,100,120,140,145,160,180,200,220,240],3),
+  wallInsulationSeries("WALL-INSULATION-BIO","BIO","Isolant biosourcé",[0.037,0.038,0.039,0.040],[45,60,80,100,120,140,145,160,180,200,220],4),
+
   fixingSystem("FIX-BOIS-GALVA","Suspente acier galvanisé","Plancher bois horizontal",20,480,[fixed("Vis TTPC 35",2),fixed("Suspente acier galvanisé")],{maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-PARE-VAPEUR","Suspente composite pour pare-vapeur","Plancher bois horizontal",20,280,[fixed("Vis TTPC 35",2),fixed("Suspente composite pour pare-vapeur")],{pareVapeur:true,maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-TIGE","Demi-collier, tige filetée et cavalier","Plancher bois horizontal",20,1000,[fixed("Vis TTPC 35",2),fixed("Demi-collier"),rod(),fixed("Cavalier pivot")],{maxInsulation:15,maxExclusive:false}),
@@ -147,7 +162,7 @@ export const plaquistoRecords:ReferenceRecord[]=[
   {id:"RULE-ISOLATION-SPACING",kind:"rule",title:"Entraxe selon le poids de l’isolant",summary:"La valeur maximale de la plage de poids est toujours retenue.",sourcePage:2,status:"Publié",data:{weight_policy:"maximum",bands:[{min_kg_m2:0,max_kg_m2:6,max_exclusive:true,spacing_m:0.6},{min_kg_m2:6,max_kg_m2:10,max_exclusive:true,spacing_m:0.5},{min_kg_m2:10,max_kg_m2:15,max_exclusive:false,spacing_m:0.4}]}},
   {id:"RULE-ROD-LENGTH",kind:"rule",title:"Calcul des tiges filetées",summary:"Les tiges filetées sont calculées en mètres linéaires.",sourcePage:3,status:"Publié",data:{formula:"nombre_systemes × plenum_mm / 1000",unit:"ml"}},
   {id:"RULE-DOUBLAGE-HEIGHTS",kind:"rule",title:"Hauteurs maximales — doublage sur rails et montants",summary:"Hauteurs maximales selon le parement, son format, l’entraxe, la largeur d’ossature et le montage simple ou double.",sourcePage:1,status:"Publié",data:{category:"doublage_performance",schema_version:2,work_code:"doublage-peripherique-rails-montants",frames:doublageFrames,groups:doublagePerformanceGroups,compatibility:{max_layers:2,same_width_required:true,functions_share_mechanical_family:true,single:[{families:["BA13","BA15"],widths_mm:[600,1200],performance_group_id:"BA13_BA15"},{families:["BA18"],widths_mm:[600,1200],performance_group_id:"BA18"},{families:["BA18"],widths_mm:[900],performance_group_id:"BA18_900"},{families:["BA25"],widths_mm:[900],performance_group_id:"BA25_900"}],double:{normalize_families:{BA10:"BA13"},exact:[{families:["BA6","BA6"],widths_mm:[600,1200],performance_group_id:"BA13_BA15"},{families:["BA6","BA13"],widths_mm:[600,1200],performance_group_id:"BA18"}],sets:[{families:["BA13","BA15","BA18"],widths_mm:[600,1200],performance_group_id:"DOUBLE_1200"},{families:["BA18","BA25"],widths_mm:[900],performance_group_id:"DOUBLE_900"}]}},exceeded_height_actions:["Passer en montants doubles","Augmenter la largeur des rails et montants","Ajouter des appuis intermédiaires pour montant sur mur support"],notes:["Aucune marque commerciale n’est utilisée.","BA6 et BA10 sont interdits en simple peau.","2 × BA6 équivaut mécaniquement à 1 × BA13.","BA6 + BA13 équivaut mécaniquement à 1 × BA18.","En double peau, BA10 équivaut mécaniquement à BA13.","Les deux peaux doivent avoir la même largeur.","BA18 reste nommé BA18 ; la largeur 900 ou 1200 mm détermine la règle."]}},
-  {id:"QTY-DOUBLAGE-RAILS-MONTANTS",kind:"quantity_item",title:"Quantitatifs — doublage sur rails et montants",summary:"Coefficients indicatifs et règles géométriques pour le doublage périphérique.",sourcePage:2,status:"Publié",data:{category:"doublage_quantity",work_code:"doublage-peripherique-rails-montants",reference_case:{length_m:4,height_min_m:2.5,height_max_m:2.7},coefficients:{parement_simple_m2_m2:1.05,parement_double_m2_m2:2.10,rail_ml_m2:0.84,band_ml_m2:1.73,enduit_poudre_kg_m2:0.33,enduit_pate_kg_m2:0.47},stud_ml_m2:{"0.40_simple":2.89,"0.40_double":5.25,"0.60_simple":2.10,"0.60_double":3.68},ttpc25_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},ttpc35_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},trpf13_unit_m2:{"0.40_simple":3,"0.40_double":7,"0.60_simple":2,"0.60_double":5},geometry:{rail_formula:"2 × longueur × 1.05",stud_simple_formula:"(arrondi_sup(longueur / entraxe) + 1) × hauteur × 1.05",stud_double_formula:"2 × arrondi_sup(longueur / entraxe) × hauteur × 1.05",intermediate_support_formula:"arrondi_sup((rail_ml / 2) / entraxe)"},limitations:["La visserie des entraxes 0,45 m et 0,90 m doit être complétée depuis une source technique.","La visserie d’une troisième peau doit être complétée depuis une source technique."]}},
+  {id:"QTY-DOUBLAGE-RAILS-MONTANTS",kind:"quantity_item",title:"Quantitatifs — doublage sur rails et montants",summary:"Coefficients indicatifs et règles géométriques pour le doublage périphérique.",sourcePage:2,status:"Publié",data:{category:"doublage_quantity",schema_version:2,work_code:"doublage-peripherique-rails-montants",reference_case:{length_m:4,height_min_m:2.5,height_max_m:2.7},coefficients:{parement_simple_m2_m2:1.05,parement_double_m2_m2:2.10,rail_ml_m2:0.84,band_ml_m2:1.73,enduit_poudre_kg_m2:0.33,enduit_pate_kg_m2:0.47,insulation_m2_m2:1.10,vapor_barrier_m2_m2:1.20},stud_ml_m2:{"0.40_simple":2.89,"0.40_double":5.25,"0.60_simple":2.10,"0.60_double":3.68},ttpc25_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},ttpc35_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},trpf13_unit_m2:{"0.40_simple":3,"0.40_double":7,"0.60_simple":2,"0.60_double":5},geometry:{rail_formula:"2 × longueur × 1.05",stud_simple_formula:"(arrondi_sup(longueur / entraxe) + 1) × hauteur × 1.05",stud_double_formula:"2 × arrondi_sup(longueur / entraxe) × hauteur × 1.05",intermediate_support_formula:"arrondi_sup((rail_ml / 2) / entraxe)",double_sided_tape_simple_formula:"stud_ml",double_sided_tape_double_formula:"stud_ml / 2"},limitations:["La visserie des entraxes 0,45 m et 0,90 m doit être complétée depuis une source technique.","La visserie d’une troisième peau doit être complétée depuis une source technique."]}},
 ];
 
 export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation de plafond sur fourrures",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};

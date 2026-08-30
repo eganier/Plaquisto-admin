@@ -28,6 +28,14 @@ export async function GET(){
   if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
   current=[...current.filter(row=>row.kind!=="facing"&&row.id!=="RULE-DOUBLAGE-HEIGHTS"),...migrationRecords.map(toRow)];
  }
+ const storedDoublageQuantity=current.find(row=>row.id==="QTY-DOUBLAGE-RAILS-MONTANTS");
+ const currentDoublageQuantity=plaquistoRecords.find(record=>record.id==="QTY-DOUBLAGE-RAILS-MONTANTS");
+ if(storedDoublageQuantity?.data?.schema_version!==2&&currentDoublageQuantity){
+  const nextRow=toRow(currentDoublageQuantity);
+  const {error:migrationError}=await supabase.from("reference_records").upsert(nextRow);
+  if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
+  current=current.map(row=>row.id===currentDoublageQuantity.id?nextRow:row);
+ }
  const existingIds=new Set(current.map(row=>row.id));
  const missing=plaquistoRecords.filter(record=>!existingIds.has(record.id));
  if(missing.length){

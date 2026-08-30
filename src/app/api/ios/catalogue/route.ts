@@ -13,6 +13,8 @@ export async function GET(){
  const records=(data||[]).map(row=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data,updatedAt:row.updated_at})) as (ReferenceRecord&{updatedAt:string})[];
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
  const quantityItems=byKind("quantity_item"),vaporBarrier=quantityItems.filter(record=>record.data.category==="vapor_barrier");
+ const wallInsulations=byKind("insulation_series").filter(record=>record.data.category==="wall_insulation");
+ const defaultWallInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&record.data.category==="wall_insulation");
  const defaultVaporBarrier=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="quantity_item"&&record.data.category==="vapor_barrier");
  const seed=(id:string)=>plaquistoRecords.find(record=>record.id===id&&record.status==="Publié")??null;
  const works=byKind("work"),facings=byKind("facing"),rules=byKind("rule");
@@ -22,12 +24,13 @@ export async function GET(){
  const defaultDoublageFacings=genericFacingRecords.filter(record=>record.status==="Publié");
  const storedDoublagePerformance=rules.find(record=>record.data.category==="doublage_performance");
  const doublagePerformance=storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS");
- const doublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity")??seed("QTY-DOUBLAGE-RAILS-MONTANTS");
+ const storedDoublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity");
+ const doublageQuantity=storedDoublageQuantity?.data.schema_version===2?storedDoublageQuantity:seed("QTY-DOUBLAGE-RAILS-MONTANTS");
  return NextResponse.json({
-  version:"3.0",ouvrage:ceilingWork,isolation:byKind("insulation_series"),systemesFixation:byKind("fixing_system"),
+  version:"4.0",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:rules.filter(record=>record.data.category!=="doublage_performance"),
-  doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity},
+  doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
  },{headers:{"Cache-Control":"no-store"}});
 }

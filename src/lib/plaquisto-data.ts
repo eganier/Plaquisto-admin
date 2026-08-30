@@ -35,7 +35,7 @@ const insulationSeries = (
   id,kind:"insulation_series",title,
   summary:`${material} · ${conductivity} · ${density}`,
   sourcePage:1,status:"Publié",
-  data:{material,conductivity,density,weight_policy:"maximum",values:thicknesses.map((thickness_mm,index)=>({thickness_mm,max_weight_kg_m2:weights[index]}))},
+  data:{material,conductivity,density,...(conductivity.match(/0[,\.]\d+/)?{lambda_w_mk:Number(conductivity.match(/0[,\.]\d+/)![0].replace(",","."))}:{}),weight_policy:"maximum",values:thicknesses.map((thickness_mm,index)=>({thickness_mm,max_weight_kg_m2:weights[index]}))},
 });
 
 const wallInsulationSeries = (

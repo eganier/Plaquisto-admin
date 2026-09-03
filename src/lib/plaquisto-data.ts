@@ -47,6 +47,19 @@ const wallInsulationSeries = (
   data:{category:"wall_insulation",schema_version:1,code,material:title,compatible_work_codes:["doublage-peripherique-rails-montants"],lambdas:lambdas.map(lambda_w_mk=>({lambda_w_mk,thicknesses_mm:thicknesses}))},
 });
 
+const partitionInsulationSeries = (
+  id:string,code:string,title:string,lambda:number,thicknesses:number[],woodFiber=false,
+):ReferenceRecord => ({
+  id,kind:"insulation_series",title,
+  summary:`${code} · λ ${lambda.toFixed(3).replace(".",",")} W/(m·K)`,
+  sourcePage:1,status:"Publié",
+  data:{
+    category:"partition_insulation",schema_version:1,code,material:title,
+    compatible_work_codes:["cloison-de-distribution"],lambda_w_mk:lambda,
+    thicknesses_mm:thicknesses,max_over_frame_mm:woodFiber?0:10,
+  },
+});
+
 const fixingSystem = (
   id:string,title:string,support:string,min:number,max:number,components:FixingComponent[],
   options:{pareVapeur?:boolean;maxInsulation?:number;maxExclusive?:boolean}={},
@@ -81,7 +94,7 @@ const facing=(family:string,feature:FacingFunction):ReferenceRecord=>{
  return {
   id:`FACING-${family}-${feature}`.toUpperCase().replaceAll("_","-"),kind:"facing",title,
   summary:`Plaque de plâtre générique · ${facingFunctionLabels[feature]} · ${facingThickness[family]} mm`,sourcePage:0,status:"Publié",
-  data:{catalog_schema_version:2,code:`${family}_${feature}`.toUpperCase(),material:"plaque_de_platre",nominal_family:family,mechanical_family:family,thickness_mm:facingThickness[family],function:feature,humidity_class:feature==="hydrofuge"?"H1":"",edge_type:feature==="quatre_bords_amincis"?"4_bords_amincis":"2_bords_amincis",reaction_fire:"",weight_kg_m2:0,color:"",compatible_work_codes:["plafond-fourrure-horizontal","doublage-peripherique-rails-montants"],dimensions:facingFormats[family]},
+  data:{catalog_schema_version:2,code:`${family}_${feature}`.toUpperCase(),material:"plaque_de_platre",nominal_family:family,mechanical_family:family,thickness_mm:facingThickness[family],function:feature,humidity_class:feature==="hydrofuge"?"H1":"",edge_type:feature==="quatre_bords_amincis"?"4_bords_amincis":"2_bords_amincis",reaction_fire:"",weight_kg_m2:0,color:"",compatible_work_codes:["plafond-fourrure-horizontal","doublage-peripherique-rails-montants","cloison-de-distribution"],dimensions:facingFormats[family]},
  };
 };
 const standardOnly=["BA6","BA10"];
@@ -102,6 +115,35 @@ const doublagePerformanceGroups=[
  {id:"DOUBLE_900",label:"Double peau · BA18 ou BA25 · largeur 900 mm",width_mm:900,components:[{code:"BA18",count:2}],alternatives:["2 × BA18","BA18 + BA25","2 × BA25"],values:[...heights(.9,[2,2.25,2.45,2.7,2.9,3.35,3.55],[2.35,2.7,2.9,3.2,3.45,4,4.25]),...heights(.45,[2.35,2.7,2.9,3.2,3.45,4,4.25],[2.8,3.2,3.45,3.85,4.1,4.75,5.05])]},
 ];
 
+const cloisonDistributionSystems=[
+ {id:"72-36-ba18",type:"72/36",total_thickness_mm:72,frame:"R36 + M36",frame_width_mm:36,stud_variant:"standard",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:30,heights:{simple_060:0,simple_040:2.80,double_060:2.60,double_040:3.10}},
+ {id:"62-36-ba13",type:"62/36",total_thickness_mm:62,frame:"R36 + M36",frame_width_mm:36,stud_variant:"standard",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:30,heights:{simple_060:0,simple_040:2.10,double_060:0,double_040:2.60}},
+ {id:"66-36-ba15",type:"66/36",total_thickness_mm:66,frame:"R36 + M36",frame_width_mm:36,stud_variant:"standard",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:30,heights:{simple_060:1.90,simple_040:2.20,double_060:2.45,double_040:2.70}},
+ {id:"72-48-35-ba13",type:"72/48",total_thickness_mm:72,frame:"R48 + M48/35",frame_width_mm:48,stud_variant:"35",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:45,heights:{simple_060:2.50,simple_040:2.75,double_060:3.05,double_040:3.40}},
+ {id:"78-48-35-ba15",type:"78/48",total_thickness_mm:78,frame:"R48 + M48/35",frame_width_mm:48,stud_variant:"35",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:45,heights:{simple_060:2.60,simple_040:3.00,double_060:3.15,double_040:3.50}},
+ {id:"72-48-50-ba13",type:"72/48",total_thickness_mm:72,frame:"R48 + M48/50",frame_width_mm:48,stud_variant:"50",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:45,heights:{simple_060:2.55,simple_040:2.90,double_060:3.20,double_040:3.60}},
+ {id:"78-48-50-ba15",type:"78/48",total_thickness_mm:78,frame:"R48 + M48/50",frame_width_mm:48,stud_variant:"50",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:45,heights:{simple_060:3.00,simple_040:3.40,double_060:3.65,double_040:4.10}},
+ {id:"84-48-50-ba18",type:"84/48",total_thickness_mm:84,frame:"R48 + M48/50",frame_width_mm:48,stud_variant:"50",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:45,heights:{simple_060:3.15,simple_040:3.55,double_060:3.80,double_040:4.30}},
+ {id:"84-48-35-ba18",type:"84/48",total_thickness_mm:84,frame:"R48 + M48/35",frame_width_mm:48,stud_variant:"35",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:45,heights:{simple_060:2.70,simple_040:3.05,double_060:3.35,double_040:3.75}},
+ {id:"88-62-ba13",type:"88/62",total_thickness_mm:88,frame:"R62 + M62",frame_width_mm:62,stud_variant:"standard",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:60,heights:{simple_060:3.00,simple_040:3.45,double_060:3.75,double_040:4.15}},
+ {id:"92-62-ba15",type:"92/62",total_thickness_mm:92,frame:"R62 + M62",frame_width_mm:62,stud_variant:"standard",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:60,heights:{simple_060:3.10,simple_040:3.55,double_060:3.85,double_040:4.25}},
+ {id:"98-62-ba18",type:"98/62",total_thickness_mm:98,frame:"R62 + M62",frame_width_mm:62,stud_variant:"standard",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:60,heights:{simple_060:3.20,simple_040:3.70,double_060:4.05,double_040:4.55}},
+ {id:"96-70-ba13",type:"96/70",total_thickness_mm:96,frame:"R70 + M70",frame_width_mm:70,stud_variant:"standard",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:70,heights:{simple_060:3.20,simple_040:3.65,double_060:4.10,double_040:4.60}},
+ {id:"100-70-ba15",type:"100/70",total_thickness_mm:100,frame:"R70 + M70",frame_width_mm:70,stud_variant:"standard",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:70,heights:{simple_060:3.40,simple_040:3.90,double_060:4.25,double_040:4.85}},
+ {id:"106-70-ba18",type:"106/70",total_thickness_mm:106,frame:"R70 + M70",frame_width_mm:70,stud_variant:"standard",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:70,heights:{simple_060:3.50,simple_040:4.05,double_060:4.45,double_040:5.00}},
+ {id:"116-90-ba13",type:"116/90",total_thickness_mm:116,frame:"R90 + M90",frame_width_mm:90,stud_variant:"standard",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:85,heights:{simple_060:3.90,simple_040:4.50,double_060:4.60,double_040:5.10}},
+ {id:"120-90-ba15",type:"120/90",total_thickness_mm:120,frame:"R90 + M90",frame_width_mm:90,stud_variant:"standard",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:85,heights:{simple_060:4.10,simple_040:4.70,double_060:5.15,double_040:5.75}},
+ {id:"126-90-ba18",type:"126/90",total_thickness_mm:126,frame:"R90 + M90",frame_width_mm:90,stud_variant:"standard",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:85,heights:{simple_060:4.30,simple_040:4.95,double_060:5.35,double_040:5.90}},
+ {id:"126-100-ba13",type:"126/100",total_thickness_mm:126,frame:"R100 + M100",frame_width_mm:100,stud_variant:"standard",layers_per_face:1,facing_family:"BA13",recommended_insulation_mm:100,heights:{simple_060:4.20,simple_040:4.80,double_060:4.90,double_040:5.50}},
+ {id:"130-100-ba15",type:"130/100",total_thickness_mm:130,frame:"R100 + M100",frame_width_mm:100,stud_variant:"standard",layers_per_face:1,facing_family:"BA15",recommended_insulation_mm:100,heights:{simple_060:4.55,simple_040:5.20,double_060:5.70,double_040:6.35}},
+ {id:"136-100-ba18",type:"136/100",total_thickness_mm:136,frame:"R100 + M100",frame_width_mm:100,stud_variant:"standard",layers_per_face:1,facing_family:"BA18",recommended_insulation_mm:100,heights:{simple_060:4.65,simple_040:5.30,double_060:5.80,double_040:6.45}},
+ {id:"98-48-35-double-ba13",type:"98/48",total_thickness_mm:98,frame:"R48 + M48/35",frame_width_mm:48,stud_variant:"35",layers_per_face:2,facing_family:"BA13",recommended_insulation_mm:45,heights:{simple_060:3.00,simple_040:3.40,double_060:3.75,double_040:4.15}},
+ {id:"98-48-50-double-ba13",type:"98/48",total_thickness_mm:98,frame:"R48 + M48/50",frame_width_mm:48,stud_variant:"50",layers_per_face:2,facing_family:"BA13",recommended_insulation_mm:45,heights:{simple_060:3.10,simple_040:3.50,double_060:3.85,double_040:4.30}},
+ {id:"120-70-double-ba13",type:"120/70",total_thickness_mm:120,frame:"R70 + M70",frame_width_mm:70,stud_variant:"standard",layers_per_face:2,facing_family:"BA13",recommended_insulation_mm:70,heights:{simple_060:3.85,simple_040:4.45,double_060:4.90,double_040:5.40}},
+ {id:"140-90-double-ba13",type:"140/90",total_thickness_mm:140,frame:"R90 + M90",frame_width_mm:90,stud_variant:"standard",layers_per_face:2,facing_family:"BA13",recommended_insulation_mm:85,heights:{simple_060:4.65,simple_040:5.30,double_060:5.70,double_040:6.30}},
+ {id:"150-100-double-ba13",type:"150/100",total_thickness_mm:150,frame:"R100 + M100",frame_width_mm:100,stud_variant:"standard",layers_per_face:2,facing_family:"BA13",recommended_insulation_mm:100,heights:{simple_060:5.10,simple_040:5.75,double_060:6.20,double_040:6.85}},
+];
+
 const glassThicknesses=[45,60,80,100,120,140,160,200,240,300];
 const rockThicknesses=[45,60,80,100,120,140,160,180,200,240,300];
 const woodThicknesses=[40,45,60,80,100,120,140,160,180,200,220,240,300];
@@ -110,6 +152,7 @@ const looseThicknesses=[40,60,80,100,120,140,160,180,200,220,240,260,280,300,320
 export const plaquistoRecords:ReferenceRecord[]=[
   {id:"WORK-PLAFOND-FOURRURE-HORIZONTAL",kind:"work",title:"Plafond sur fourrures horizontal",summary:"Ouvrage de plafond suspendu sur fourrures F45. La configuration détermine l’isolant, le système de fixation et les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"plafond-fourrure-horizontal",fourrure:"F45",source:"Plaquisto_Tableaux_Plafond_fourrure horizontal.numbers"}},
   {id:"WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS",kind:"work",title:"Doublage périphérique sur rails et montants",summary:"Doublage périphérique sur ossature métallique. L’application vérifie la hauteur admissible et calcule les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"doublage-peripherique-rails-montants",family:"Doublages périphériques",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_doublage peripherique rails montant.numbers"}},
+  {id:"WORK-CLOISON-DE-DISTRIBUTION",kind:"work",title:"Cloison de distribution",summary:"Cloison sur rails et montants, avec parements configurables séparément sur les faces A et B.",sourcePage:1,status:"Publié",data:{code:"cloison-de-distribution",family:"Cloisons",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_Cloison_de_distribution.numbers"}},
 
   ...genericFacingRecords,
 
@@ -129,6 +172,12 @@ export const plaquistoRecords:ReferenceRecord[]=[
   wallInsulationSeries("WALL-INSULATION-LDR","LDR","Laine de roche",[0.032,0.033,0.034,0.035],[40,45,60,75,100,120,130,140,160,180,200],2),
   wallInsulationSeries("WALL-INSULATION-LDB","LDB","Laine de bois",[0.036,0.037,0.038],[40,50,60,80,100,120,140,145,160,180,200,220,240],3),
   wallInsulationSeries("WALL-INSULATION-BIO","BIO","Isolant biosourcé",[0.037,0.038,0.039,0.040],[45,60,80,100,120,140,145,160,180,200,220],4),
+
+  partitionInsulationSeries("PARTITION-INSULATION-LDV-PHONIQUE","LDV-PHONIQUE","Laine de verre phonique",0.040,[30,45,60,70,85]),
+  partitionInsulationSeries("PARTITION-INSULATION-LDV-THERMIQUE","LDV-THERMIQUE","Laine de verre thermique",0.032,[60,75,85,100]),
+  partitionInsulationSeries("PARTITION-INSULATION-LDR","LDR","Laine de roche",0.035,[40,45,60,75,100]),
+  partitionInsulationSeries("PARTITION-INSULATION-BIO","BIO","Biosourcé · chanvre, lin, coton",0.038,[40,60,80,100]),
+  partitionInsulationSeries("PARTITION-INSULATION-BOIS","BOIS","Laine de bois",0.036,[40,50,60,80,100],true),
 
   fixingSystem("FIX-BOIS-GALVA","Suspente acier galvanisé","Plancher bois horizontal",20,480,[fixed("Vis TTPC 35",2),fixed("Suspente acier galvanisé")],{maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-PARE-VAPEUR","Suspente composite pour pare-vapeur","Plancher bois horizontal",20,280,[fixed("Vis TTPC 35",2),fixed("Suspente composite pour pare-vapeur")],{pareVapeur:true,maxInsulation:15,maxExclusive:false}),
@@ -163,6 +212,8 @@ export const plaquistoRecords:ReferenceRecord[]=[
   {id:"RULE-ROD-LENGTH",kind:"rule",title:"Calcul des tiges filetées",summary:"Les tiges filetées sont calculées en mètres linéaires.",sourcePage:3,status:"Publié",data:{formula:"nombre_systemes × plenum_mm / 1000",unit:"ml"}},
   {id:"RULE-DOUBLAGE-HEIGHTS",kind:"rule",title:"Hauteurs maximales — doublage sur rails et montants",summary:"Hauteurs maximales selon le parement, son format, l’entraxe, la largeur d’ossature et le montage simple ou double.",sourcePage:1,status:"Publié",data:{category:"doublage_performance",schema_version:2,work_code:"doublage-peripherique-rails-montants",frames:doublageFrames,groups:doublagePerformanceGroups,compatibility:{max_layers:2,same_width_required:true,functions_share_mechanical_family:true,single:[{families:["BA13","BA15"],widths_mm:[600,1200],performance_group_id:"BA13_BA15"},{families:["BA18"],widths_mm:[600,1200],performance_group_id:"BA18"},{families:["BA18"],widths_mm:[900],performance_group_id:"BA18_900"},{families:["BA25"],widths_mm:[900],performance_group_id:"BA25_900"}],double:{normalize_families:{BA10:"BA13"},exact:[{families:["BA6","BA6"],widths_mm:[600,1200],performance_group_id:"BA13_BA15"},{families:["BA6","BA13"],widths_mm:[600,1200],performance_group_id:"BA18"}],sets:[{families:["BA13","BA15","BA18"],widths_mm:[600,1200],performance_group_id:"DOUBLE_1200"},{families:["BA18","BA25"],widths_mm:[900],performance_group_id:"DOUBLE_900"}]}},exceeded_height_actions:["Passer en montants doubles","Augmenter la largeur des rails et montants","Ajouter des appuis intermédiaires pour montant sur mur support"],notes:["Aucune marque commerciale n’est utilisée.","BA6 et BA10 sont interdits en simple peau.","2 × BA6 équivaut mécaniquement à 1 × BA13.","BA6 + BA13 équivaut mécaniquement à 1 × BA18.","En double peau, BA10 équivaut mécaniquement à BA13.","Les deux peaux doivent avoir la même largeur.","BA18 reste nommé BA18 ; la largeur 900 ou 1200 mm détermine la règle."]}},
   {id:"QTY-DOUBLAGE-RAILS-MONTANTS",kind:"quantity_item",title:"Quantitatifs — doublage sur rails et montants",summary:"Coefficients indicatifs et règles géométriques pour le doublage périphérique.",sourcePage:2,status:"Publié",data:{category:"doublage_quantity",schema_version:2,work_code:"doublage-peripherique-rails-montants",reference_case:{length_m:4,height_min_m:2.5,height_max_m:2.7},coefficients:{parement_simple_m2_m2:1.05,parement_double_m2_m2:2.10,rail_ml_m2:0.84,band_ml_m2:1.73,enduit_poudre_kg_m2:0.33,enduit_pate_kg_m2:0.47,insulation_m2_m2:1.10,vapor_barrier_m2_m2:1.20},stud_ml_m2:{"0.40_simple":2.89,"0.40_double":5.25,"0.60_simple":2.10,"0.60_double":3.68},ttpc25_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},ttpc35_unit_m2:{"0.40_simple":15,"0.40_double":30,"0.60_simple":11,"0.60_double":22},trpf13_unit_m2:{"0.40_simple":3,"0.40_double":7,"0.60_simple":2,"0.60_double":5},geometry:{rail_formula:"2 × longueur × 1.05",stud_simple_formula:"(arrondi_sup(longueur / entraxe) + 1) × hauteur × 1.05",stud_double_formula:"2 × arrondi_sup(longueur / entraxe) × hauteur × 1.05",intermediate_support_formula:"arrondi_sup((rail_ml / 2) / entraxe)",double_sided_tape_simple_formula:"stud_ml",double_sided_tape_double_formula:"stud_ml / 2"},limitations:["La visserie des entraxes 0,45 m et 0,90 m doit être complétée depuis une source technique.","La visserie d’une troisième peau doit être complétée depuis une source technique."]}},
+  {id:"RULE-CLOISON-DISTRIBUTION-HEIGHTS",kind:"rule",title:"Hauteurs maximales — cloison de distribution",summary:"Hauteurs maximales selon le type de cloison, l’entraxe et le montage des montants.",sourcePage:1,status:"Publié",data:{category:"cloison_distribution_performance",schema_version:3,work_code:"cloison-de-distribution",systems:cloisonDistributionSystems,notes:["Les valeurs acoustiques ne sont pas utilisées dans le configurateur.","Les plaques de largeur 1 200 mm sont retenues conformément au tableau.","Les montants M48/35 et M48/50 sont proposés comme deux choix distincts."]}},
+  {id:"QTY-CLOISON-DISTRIBUTION",kind:"quantity_item",title:"Quantitatifs — cloison de distribution",summary:"Coefficients indicatifs par m² de cloison pour les deux faces.",sourcePage:2,status:"Publié",data:{category:"cloison_distribution_quantity",schema_version:1,work_code:"cloison-de-distribution",coefficients:{parement_per_face_and_layer_m2_m2:1.05,rail_simple_skin_ml_m2:0.84,rail_double_skin_ml_m2:0.70,insulation_m2_m2:1.10,band_simple_skin_ml_m2:3.47,band_double_skin_ml_m2:3.33,enduit_poudre_kg_m2:0.66,enduit_pate_kg_m2:0.94},stud_ml_m2:{"0.40_simple":2.89,"0.40_double":5.25,"0.60_simple":2.10,"0.60_double":3.68},ttpc_first_layer_unit_m2:{"simple_0.40_simple":37,"simple_0.40_double":43,"simple_0.60_simple":28,"simple_0.60_double":33,"double_0.40_simple":14,"double_0.40_double":18,"double_0.60_simple":10,"double_0.60_double":13},ttpc_second_layer_unit_m2:{"double_0.40_simple":34,"double_0.40_double":42,"double_0.60_simple":27,"double_0.60_double":32},trpf13_unit_m2:{"simple_0.40_simple":3,"simple_0.40_double":7,"simple_0.60_simple":2,"simple_0.60_double":5,"double_0.40_simple":2,"double_0.40_double":6,"double_0.60_simple":2,"double_0.60_double":4}}},
 ];
 
 export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation de plafond sur fourrures",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};

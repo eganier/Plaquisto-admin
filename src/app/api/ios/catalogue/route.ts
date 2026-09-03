@@ -14,23 +14,31 @@ export async function GET(){
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
  const quantityItems=byKind("quantity_item"),vaporBarrier=quantityItems.filter(record=>record.data.category==="vapor_barrier");
  const wallInsulations=byKind("insulation_series").filter(record=>record.data.category==="wall_insulation");
+ const partitionInsulations=byKind("insulation_series").filter(record=>record.data.category==="partition_insulation");
  const defaultWallInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&record.data.category==="wall_insulation");
+ const defaultPartitionInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&record.data.category==="partition_insulation");
  const defaultVaporBarrier=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="quantity_item"&&record.data.category==="vapor_barrier");
  const seed=(id:string)=>plaquistoRecords.find(record=>record.id===id&&record.status==="Publié")??null;
  const works=byKind("work"),facings=byKind("facing"),rules=byKind("rule");
  const ceilingWork=works.find(record=>record.data.code==="plafond-fourrure-horizontal")??seed("WORK-PLAFOND-FOURRURE-HORIZONTAL");
  const doublageWork=works.find(record=>record.data.code==="doublage-peripherique-rails-montants")??seed("WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS");
+ const partitionWork=works.find(record=>record.data.code==="cloison-de-distribution")??seed("WORK-CLOISON-DE-DISTRIBUTION");
  const genericFacings=facings.filter(record=>record.data.catalog_schema_version===2);
  const defaultDoublageFacings=genericFacingRecords.filter(record=>record.status==="Publié");
  const storedDoublagePerformance=rules.find(record=>record.data.category==="doublage_performance");
  const doublagePerformance=storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS");
  const storedDoublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity");
  const doublageQuantity=storedDoublageQuantity?.data.schema_version===2?storedDoublageQuantity:seed("QTY-DOUBLAGE-RAILS-MONTANTS");
+ const storedPartitionPerformance=rules.find(record=>record.data.category==="cloison_distribution_performance");
+ const partitionPerformance=storedPartitionPerformance?.data.schema_version===3?storedPartitionPerformance:seed("RULE-CLOISON-DISTRIBUTION-HEIGHTS");
+ const storedPartitionQuantity=quantityItems.find(record=>record.data.category==="cloison_distribution_quantity");
+ const partitionQuantity=storedPartitionQuantity?.data.schema_version===1?storedPartitionQuantity:seed("QTY-CLOISON-DISTRIBUTION");
  return NextResponse.json({
-  version:"4.0",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
+  version:"4.2",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:rules.filter(record=>record.data.category!=="doublage_performance"),
   doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
+  cloisonDistribution:{ouvrage:partitionWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:partitionPerformance,quantitatif:partitionQuantity,isolants:partitionInsulations.length?partitionInsulations:defaultPartitionInsulations},
  },{headers:{"Cache-Control":"no-store"}});
 }

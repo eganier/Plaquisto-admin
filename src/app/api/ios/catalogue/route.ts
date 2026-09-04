@@ -1,6 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
-import {genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
+import {alveolarFacingRecords,genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
 export const dynamic="force-dynamic";
 
@@ -23,7 +23,9 @@ export async function GET(){
  const ceilingWork=works.find(record=>record.data.code==="plafond-fourrure-horizontal")??seed("WORK-PLAFOND-FOURRURE-HORIZONTAL");
  const doublageWork=works.find(record=>record.data.code==="doublage-peripherique-rails-montants")??seed("WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS");
  const partitionWork=works.find(record=>record.data.code==="cloison-de-distribution")??seed("WORK-CLOISON-DE-DISTRIBUTION");
+ const alveolarWork=works.find(record=>record.data.code==="cloison-de-distribution-alveolaire")??seed("WORK-CLOISON-ALVEOLAIRE");
  const genericFacings=facings.filter(record=>record.data.catalog_schema_version===2);
+ const alveolarFacings=facings.filter(record=>record.data.catalog_schema_version===3&&record.data.material==="panneau_cloison_alveolaire");
  const defaultDoublageFacings=genericFacingRecords.filter(record=>record.status==="Publié");
  const storedDoublagePerformance=rules.find(record=>record.data.category==="doublage_performance");
  const doublagePerformance=storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS");
@@ -33,12 +35,17 @@ export async function GET(){
  const partitionPerformance=storedPartitionPerformance?.data.schema_version===3?storedPartitionPerformance:seed("RULE-CLOISON-DISTRIBUTION-HEIGHTS");
  const storedPartitionQuantity=quantityItems.find(record=>record.data.category==="cloison_distribution_quantity");
  const partitionQuantity=storedPartitionQuantity?.data.schema_version===1?storedPartitionQuantity:seed("QTY-CLOISON-DISTRIBUTION");
+ const storedAlveolarRules=rules.find(record=>record.data.category==="cloison_alveolaire_rules");
+ const alveolarRules=storedAlveolarRules?.data.schema_version===1?storedAlveolarRules:seed("RULE-CLOISON-ALVEOLAIRE");
+ const storedAlveolarQuantity=quantityItems.find(record=>record.data.category==="cloison_alveolaire_quantity");
+ const alveolarQuantity=storedAlveolarQuantity?.data.schema_version===1?storedAlveolarQuantity:seed("QTY-CLOISON-ALVEOLAIRE");
  return NextResponse.json({
-  version:"4.2",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
+  version:"4.3",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:rules.filter(record=>record.data.category!=="doublage_performance"),
   doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
   cloisonDistribution:{ouvrage:partitionWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:partitionPerformance,quantitatif:partitionQuantity,isolants:partitionInsulations.length?partitionInsulations:defaultPartitionInsulations},
+  cloisonAlveolaire:{ouvrage:alveolarWork,parements:alveolarFacings.length?alveolarFacings:alveolarFacingRecords,regles:alveolarRules,quantitatif:alveolarQuantity},
  },{headers:{"Cache-Control":"no-store"}});
 }

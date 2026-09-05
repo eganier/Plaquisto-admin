@@ -118,6 +118,22 @@ export const alveolarFacingRecords:ReferenceRecord[]=[
   {width_mm:1200,length_mm:2500},{width_mm:1200,length_mm:2600},{width_mm:1200,length_mm:2700},
  ]),
 ];
+
+const bondedLiningHeights=[2500,2600,2700,2800,3000];
+const bondedComplex=(facing:"standard"|"hydrofuge"|"pare_vapeur",lambda_w_mk:number,insulation_thickness_mm:number,thermal_resistance_m2_kw:number,width_mm=1200,heights_mm=bondedLiningHeights)=>({
+ facing,lambda_w_mk,insulation_thickness_mm,thermal_resistance_m2_kw,width_mm,heights_mm,
+ total_thickness_mm:insulation_thickness_mm+13,reveal_depth_mm:insulation_thickness_mm+20,
+});
+const bondedComplexes=[
+ ...[[20,.65],[40,1.30],[60,1.90],[80,2.55],[100,3.15],[120,3.80],[140,4.40],[160,5.05],[180,5.65]].map(([thickness,resistance])=>bondedComplex("standard",.032,thickness,resistance)),
+ ...[[40,1.30],[60,1.90],[80,2.55]].map(([thickness,resistance])=>bondedComplex("standard",.032,thickness,resistance,600,[2500])),
+ ...[[80,2.75],[100,3.40],[120,4.10],[140,4.75],[160,5.35],[180,6.05]].map(([thickness,resistance])=>bondedComplex("standard",.030,thickness,resistance)),
+ bondedComplex("hydrofuge",.030,80,2.75),
+ bondedComplex("hydrofuge",.032,100,3.15),
+ bondedComplex("hydrofuge",.030,100,3.40),
+ bondedComplex("hydrofuge",.032,120,3.80),
+ bondedComplex("pare_vapeur",.032,100,3.15,1200,[2500,2600,2700]),
+];
 const doublageFrames=["R36 + M36","R48 + M48","R48 + M48-50","R62 + M62","R70 + M70","R90 + M90","R100 + M100"];
 const heights=(spacing_m:number,simple:number[],double:number[])=>doublageFrames.map((frame,index)=>({frame,spacing_m,simple_m:simple[index],double_m:double[index]}));
 const doublagePerformanceGroups=[
@@ -166,6 +182,7 @@ const looseThicknesses=[40,60,80,100,120,140,160,180,200,220,240,260,280,300,320
 export const plaquistoRecords:ReferenceRecord[]=[
   {id:"WORK-PLAFOND-FOURRURE-HORIZONTAL",kind:"work",title:"Plafond sur fourrures horizontal",summary:"Ouvrage de plafond suspendu sur fourrures F45. La configuration détermine l’isolant, le système de fixation et les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"plafond-fourrure-horizontal",fourrure:"F45",source:"Plaquisto_Tableaux_Plafond_fourrure horizontal.numbers"}},
   {id:"WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS",kind:"work",title:"Doublage périphérique sur rails et montants",summary:"Doublage périphérique sur ossature métallique. L’application vérifie la hauteur admissible et calcule les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"doublage-peripherique-rails-montants",family:"Doublages périphériques",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_doublage peripherique rails montant.numbers"}},
+  {id:"WORK-DOUBLAGE-PERIPHERIQUE-COMPLEXE-COLLE",kind:"work",title:"Doublage périphérique en complexe collé",summary:"Doublage périphérique constitué d’un complexe plaque de plâtre et PSE posé au mortier adhésif.",sourcePage:1,status:"Publié",data:{code:"doublage-peripherique-complexe-colle",family:"Doublages périphériques",system_type:"Complexe collé",source:"Plaquisto_Doublage_peripherique_colle 3.numbers"}},
   {id:"WORK-CLOISON-DE-DISTRIBUTION",kind:"work",title:"Cloison de distribution",summary:"Cloison sur rails et montants, avec parements configurables séparément sur les faces A et B.",sourcePage:1,status:"Publié",data:{code:"cloison-de-distribution",family:"Cloisons",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_Cloison_de_distribution.numbers"}},
   {id:"WORK-CLOISON-ALVEOLAIRE",kind:"work",title:"Cloison de distribution alvéolaire",summary:"Cloison alvéolaire de 50 mm, réalisable jusqu’à 2,70 m de hauteur.",sourcePage:1,status:"Publié",data:{code:"cloison-de-distribution-alveolaire",family:"Cloisons",system_type:"Panneaux alvéolaires",maximum_height_m:2.70,source:"Plaquisto_Quantites_indicatives_Placo alveolaire.numbers"}},
 
@@ -232,6 +249,8 @@ export const plaquistoRecords:ReferenceRecord[]=[
   {id:"QTY-CLOISON-DISTRIBUTION",kind:"quantity_item",title:"Quantitatifs — cloison de distribution",summary:"Coefficients indicatifs par m² de cloison pour les deux faces.",sourcePage:2,status:"Publié",data:{category:"cloison_distribution_quantity",schema_version:1,work_code:"cloison-de-distribution",coefficients:{parement_per_face_and_layer_m2_m2:1.05,rail_simple_skin_ml_m2:0.84,rail_double_skin_ml_m2:0.70,insulation_m2_m2:1.10,band_simple_skin_ml_m2:3.47,band_double_skin_ml_m2:3.33,enduit_poudre_kg_m2:0.66,enduit_pate_kg_m2:0.94},stud_ml_m2:{"0.40_simple":2.89,"0.40_double":5.25,"0.60_simple":2.10,"0.60_double":3.68},ttpc_first_layer_unit_m2:{"simple_0.40_simple":37,"simple_0.40_double":43,"simple_0.60_simple":28,"simple_0.60_double":33,"double_0.40_simple":14,"double_0.40_double":18,"double_0.60_simple":10,"double_0.60_double":13},ttpc_second_layer_unit_m2:{"double_0.40_simple":34,"double_0.40_double":42,"double_0.60_simple":27,"double_0.60_double":32},trpf13_unit_m2:{"simple_0.40_simple":3,"simple_0.40_double":7,"simple_0.60_simple":2,"simple_0.60_double":5,"double_0.40_simple":2,"double_0.40_double":6,"double_0.60_simple":2,"double_0.60_double":4}}},
   {id:"RULE-CLOISON-ALVEOLAIRE",kind:"rule",title:"Règles — cloison de distribution alvéolaire",summary:"Hauteur maximale et formats de panneaux compatibles.",sourcePage:1,status:"Publié",data:{category:"cloison_alveolaire_rules",schema_version:1,work_code:"cloison-de-distribution-alveolaire",maximum_height_m:2.70,minimum_panel_height_rule:"panel_length_mm >= work_height_mm"}},
   {id:"QTY-CLOISON-ALVEOLAIRE",kind:"quantity_item",title:"Quantitatifs — cloison de distribution alvéolaire",summary:"Coefficients indicatifs par m² selon la largeur des panneaux.",sourcePage:1,status:"Publié",data:{category:"cloison_alveolaire_quantity",schema_version:1,work_code:"cloison-de-distribution-alveolaire",by_panel_width_mm:{"600":{panel_m2_m2:1.05,semelle_ml_m2:0.42,rail_ml_m2:0.68,clavette_unit_m2:4,ttpc35_unit_m2:14,ttpc70_unit_m2:3,band_ml_m2:4.2,enduit_poudre_kg_m2:1.02,enduit_pate_kg_m2:1.42},"1200":{panel_m2_m2:1.05,semelle_ml_m2:0.42,rail_ml_m2:0.68,clavette_unit_m2:2,ttpc35_unit_m2:8,ttpc70_unit_m2:1,band_ml_m2:2.8,enduit_poudre_kg_m2:0.66,enduit_pate_kg_m2:0.94}},component_names:{rail:"Rail pour cloison alvéolaire",semelle:"Semelle pour cloison alvéolaire",clavette:"Clavettes",ttpc35:"Vis TTPC 35",ttpc70:"Vis TTPC 70",band:"Bande PP grand rouleau",powder:"Enduit en poudre",paste:"Enduit en pâte"}}},
+  {id:"RULE-DOUBLAGE-COMPLEXE-COLLE",kind:"rule",title:"Catalogue — doublage périphérique en complexe collé",summary:"Combinaisons vérifiées de parement, lambda, épaisseur de PSE, largeur et hauteur. Les tapées servent uniquement de recommandation.",sourcePage:1,status:"Publié",data:{category:"bonded_lining_catalogue",schema_version:1,work_code:"doublage-peripherique-complexe-colle",facings:[{code:"standard",title:"Standard",supply_name:"Complexe de doublage standard"},{code:"hydrofuge",title:"Hydrofuge",supply_name:"Complexe de doublage hydrofuge"},{code:"pare_vapeur",title:"Pare-vapeur",supply_name:"Complexe de doublage pare-vapeur"}],reveal_depths_mm:[40,60,80,100,120,140,160,180,200],reveal_to_insulation_offset_mm:20,complexes:bondedComplexes}},
+  {id:"QTY-DOUBLAGE-COMPLEXE-COLLE",kind:"quantity_item",title:"Quantitatifs — doublage périphérique en complexe collé",summary:"Coefficients indicatifs pour 1 m² d’ouvrage jointoyé avec bande.",sourcePage:2,status:"Publié",data:{category:"bonded_lining_quantity",schema_version:1,work_code:"doublage-peripherique-complexe-colle",coefficients:{complex_m2_m2:1.05,adhesive_kg_m2:1.80,band_ml_m2:1.40,powder_kg_m2:0.33},component_names:{adhesive:"Mortier adhésif",band:"Bande à joint",powder:"Enduit en poudre"}}},
 ];
 
 export const recordLabels:Record<RecordKind,string>={work:"Ouvrages",insulation_series:"Isolation",fixing_system:"Systèmes de fixation de plafond sur fourrures",facing:"Parements",quantity_item:"Quantitatifs",rule:"Règles de calcul"};

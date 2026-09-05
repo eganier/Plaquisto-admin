@@ -44,11 +44,13 @@ export async function GET(){
  const bondedLiningCatalogue=storedBondedLiningCatalogue?.data.schema_version===1?storedBondedLiningCatalogue:seed("RULE-DOUBLAGE-COMPLEXE-COLLE");
  const storedBondedLiningQuantity=quantityItems.find(record=>record.data.category==="bonded_lining_quantity");
  const bondedLiningQuantity=storedBondedLiningQuantity?.data.schema_version===1?storedBondedLiningQuantity:seed("QTY-DOUBLAGE-COMPLEXE-COLLE");
+ const storedSlopedCeilingRule=rules.find(record=>record.data.category==="sloped_ceiling");
+ const slopedCeilingRule=storedSlopedCeilingRule??seed("RULE-PLAFOND-RAMPANT");
  return NextResponse.json({
-  version:"4.4",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
+  version:"4.5",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
-  regles:rules.filter(record=>record.data.category!=="doublage_performance"),
+  regles:[...rules.filter(record=>record.data.category!=="doublage_performance"),...(storedSlopedCeilingRule||!slopedCeilingRule?[]:[slopedCeilingRule])],
   doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
   cloisonDistribution:{ouvrage:partitionWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:partitionPerformance,quantitatif:partitionQuantity,isolants:partitionInsulations.length?partitionInsulations:defaultPartitionInsulations},
   cloisonAlveolaire:{ouvrage:alveolarWork,parements:alveolarFacings.length?alveolarFacings:alveolarFacingRecords,regles:alveolarRules,quantitatif:alveolarQuantity},

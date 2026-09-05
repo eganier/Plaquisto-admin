@@ -36,6 +36,21 @@ export async function GET(){
   if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
   current=current.map(row=>row.id===currentDoublageQuantity.id?nextRow:row);
  }
+ const recordsToRefresh=plaquistoRecords.filter(record=>{
+  const stored=current.find(row=>row.id===record.id);
+  if(record.id==="RULE-PLAFOND-RAMPANT")return stored?.data?.schema_version!==2;
+  if(record.id==="FACING-BA13-QUATRE-BORDS-AMINCIS"){
+   return JSON.stringify(stored?.data?.dimensions??[])!==JSON.stringify(record.data.dimensions??[]);
+  }
+  return false;
+ });
+ if(recordsToRefresh.length){
+  const nextRows=recordsToRefresh.map(toRow);
+  const {error:migrationError}=await supabase.from("reference_records").upsert(nextRows);
+  if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
+  const refreshedIds=new Set(recordsToRefresh.map(record=>record.id));
+  current=[...current.filter(row=>!refreshedIds.has(row.id)),...nextRows];
+ }
  const existingIds=new Set(current.map(row=>row.id));
  const missing=plaquistoRecords.filter(record=>!existingIds.has(record.id));
  if(missing.length){

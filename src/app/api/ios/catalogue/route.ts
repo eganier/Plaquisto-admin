@@ -25,6 +25,7 @@ export async function GET(){
  const partitionWork=works.find(record=>record.data.code==="cloison-de-distribution")??seed("WORK-CLOISON-DE-DISTRIBUTION");
  const alveolarWork=works.find(record=>record.data.code==="cloison-de-distribution-alveolaire")??seed("WORK-CLOISON-ALVEOLAIRE");
  const bondedLiningWork=works.find(record=>record.data.code==="doublage-peripherique-complexe-colle")??seed("WORK-DOUBLAGE-PERIPHERIQUE-COMPLEXE-COLLE");
+ const furringLiningWork=works.find(record=>record.data.code==="doublage-peripherique-lisses-fourrures")??seed("WORK-DOUBLAGE-PERIPHERIQUE-LISSES-FOURRURES");
  const fourEdgeFacingSeed=seed("FACING-BA13-QUATRE-BORDS-AMINCIS");
  const genericFacings=facings.filter(record=>record.data.catalog_schema_version===2).map(record=>
   record.id==="FACING-BA13-QUATRE-BORDS-AMINCIS"&&fourEdgeFacingSeed
@@ -33,12 +34,14 @@ export async function GET(){
  );
  const alveolarFacings=facings.filter(record=>record.data.catalog_schema_version===3&&record.data.material==="panneau_cloison_alveolaire");
  const defaultDoublageFacings=genericFacingRecords.filter(record=>record.status==="Publié");
+ const tiledAreaRule={maximum_spacing_m:0.40,single_facing_families:["BA13","BA15"]};
+ const withTiledAreaRule=(record:(ReferenceRecord&{updatedAt?:string})|null)=>record?{...record,data:{...record.data,tiled_area_rule:record.data.tiled_area_rule??tiledAreaRule}}:record;
  const storedDoublagePerformance=rules.find(record=>record.data.category==="doublage_performance");
- const doublagePerformance=storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS");
+ const doublagePerformance=withTiledAreaRule(storedDoublagePerformance?.data.schema_version===2?storedDoublagePerformance:seed("RULE-DOUBLAGE-HEIGHTS"));
  const storedDoublageQuantity=quantityItems.find(record=>record.data.category==="doublage_quantity");
  const doublageQuantity=storedDoublageQuantity?.data.schema_version===2?storedDoublageQuantity:seed("QTY-DOUBLAGE-RAILS-MONTANTS");
  const storedPartitionPerformance=rules.find(record=>record.data.category==="cloison_distribution_performance");
- const partitionPerformance=storedPartitionPerformance?.data.schema_version===3?storedPartitionPerformance:seed("RULE-CLOISON-DISTRIBUTION-HEIGHTS");
+ const partitionPerformance=withTiledAreaRule(storedPartitionPerformance?.data.schema_version===3?storedPartitionPerformance:seed("RULE-CLOISON-DISTRIBUTION-HEIGHTS"));
  const storedPartitionQuantity=quantityItems.find(record=>record.data.category==="cloison_distribution_quantity");
  const partitionQuantity=storedPartitionQuantity?.data.schema_version===1?storedPartitionQuantity:seed("QTY-CLOISON-DISTRIBUTION");
  const storedAlveolarRules=rules.find(record=>record.data.category==="cloison_alveolaire_rules");
@@ -49,10 +52,14 @@ export async function GET(){
  const bondedLiningCatalogue=storedBondedLiningCatalogue?.data.schema_version===1?storedBondedLiningCatalogue:seed("RULE-DOUBLAGE-COMPLEXE-COLLE");
  const storedBondedLiningQuantity=quantityItems.find(record=>record.data.category==="bonded_lining_quantity");
  const bondedLiningQuantity=storedBondedLiningQuantity?.data.schema_version===1?storedBondedLiningQuantity:seed("QTY-DOUBLAGE-COMPLEXE-COLLE");
+ const storedFurringLiningRules=rules.find(record=>record.data.category==="furring_lining_rules");
+ const furringLiningRules=storedFurringLiningRules?.data.schema_version===1?storedFurringLiningRules:seed("RULE-DOUBLAGE-LISSES-FOURRURES");
+ const storedFurringLiningQuantity=quantityItems.find(record=>record.data.category==="furring_lining_quantity");
+ const furringLiningQuantity=storedFurringLiningQuantity?.data.schema_version===1?storedFurringLiningQuantity:seed("QTY-DOUBLAGE-LISSES-FOURRURES");
  const storedSlopedCeilingRule=rules.find(record=>record.data.category==="sloped_ceiling");
  const slopedCeilingRule=storedSlopedCeilingRule?.data.schema_version===2?storedSlopedCeilingRule:seed("RULE-PLAFOND-RAMPANT");
  return NextResponse.json({
-  version:"4.6",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
+  version:"4.8",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:[...rules.filter(record=>record.data.category!=="doublage_performance"&&record.data.category!=="sloped_ceiling"),...(slopedCeilingRule?[slopedCeilingRule]:[])],
@@ -60,5 +67,6 @@ export async function GET(){
   cloisonDistribution:{ouvrage:partitionWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:partitionPerformance,quantitatif:partitionQuantity,isolants:partitionInsulations.length?partitionInsulations:defaultPartitionInsulations},
   cloisonAlveolaire:{ouvrage:alveolarWork,parements:alveolarFacings.length?alveolarFacings:alveolarFacingRecords,regles:alveolarRules,quantitatif:alveolarQuantity},
   doublageColle:{ouvrage:bondedLiningWork,catalogue:bondedLiningCatalogue,quantitatif:bondedLiningQuantity},
+  doublageFourrures:{ouvrage:furringLiningWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,regles:furringLiningRules,quantitatif:furringLiningQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
  },{headers:{"Cache-Control":"no-store"}});
 }

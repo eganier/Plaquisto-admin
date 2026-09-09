@@ -17,10 +17,12 @@ export async function GET(){
  const partitionInsulations=byKind("insulation_series").filter(record=>record.data.category==="partition_insulation");
  const defaultWallInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&record.data.category==="wall_insulation");
  const defaultPartitionInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&record.data.category==="partition_insulation");
+ const defaultCeilingInsulations=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="insulation_series"&&!record.data.category);
  const defaultVaporBarrier=plaquistoRecords.filter(record=>record.status==="Publié"&&record.kind==="quantity_item"&&record.data.category==="vapor_barrier");
  const seed=(id:string)=>plaquistoRecords.find(record=>record.id===id&&record.status==="Publié")??null;
  const works=byKind("work"),facings=byKind("facing"),rules=byKind("rule");
  const ceilingWork=works.find(record=>record.data.code==="plafond-fourrure-horizontal")??seed("WORK-PLAFOND-FOURRURE-HORIZONTAL");
+ const railStudCeilingWork=works.find(record=>record.data.code==="plafond-rails-montants")??seed("WORK-PLAFOND-RAILS-MONTANTS");
  const doublageWork=works.find(record=>record.data.code==="doublage-peripherique-rails-montants")??seed("WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS");
  const partitionWork=works.find(record=>record.data.code==="cloison-de-distribution")??seed("WORK-CLOISON-DE-DISTRIBUTION");
  const alveolarWork=works.find(record=>record.data.code==="cloison-de-distribution-alveolaire")??seed("WORK-CLOISON-ALVEOLAIRE");
@@ -63,8 +65,12 @@ export async function GET(){
  const adhesiveFacingQuantity=storedAdhesiveFacingQuantity?.data.schema_version===1?storedAdhesiveFacingQuantity:seed("QTY-DOUBLAGE-PAREMENT-COLLE");
  const storedSlopedCeilingRule=rules.find(record=>record.data.category==="sloped_ceiling");
  const slopedCeilingRule=storedSlopedCeilingRule?.data.schema_version===2?storedSlopedCeilingRule:seed("RULE-PLAFOND-RAMPANT");
+ const storedRailStudCeilingRules=rules.find(record=>record.data.category==="rail_stud_ceiling_rules");
+ const railStudCeilingRules=storedRailStudCeilingRules?.data.schema_version===1?storedRailStudCeilingRules:seed("RULE-PLAFOND-RAILS-MONTANTS");
+ const storedRailStudCeilingQuantity=quantityItems.find(record=>record.data.category==="rail_stud_ceiling_quantity");
+ const railStudCeilingQuantity=storedRailStudCeilingQuantity?.data.schema_version===1?storedRailStudCeilingQuantity:seed("QTY-PLAFOND-RAILS-MONTANTS");
  return NextResponse.json({
-  version:"4.9",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"),systemesFixation:byKind("fixing_system"),
+  version:"5.0",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"&&record.data.category!=="partition_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:[...rules.filter(record=>record.data.category!=="doublage_performance"&&record.data.category!=="sloped_ceiling"),...(slopedCeilingRule?[slopedCeilingRule]:[])],
@@ -74,5 +80,6 @@ export async function GET(){
   doublageColle:{ouvrage:bondedLiningWork,catalogue:bondedLiningCatalogue,quantitatif:bondedLiningQuantity},
   doublageFourrures:{ouvrage:furringLiningWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,regles:furringLiningRules,quantitatif:furringLiningQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
   doublageParementColle:{ouvrage:adhesiveFacingWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,catalogue:adhesiveFacingCatalogue,quantitatif:adhesiveFacingQuantity},
+  plafondRailsMontants:{ouvrage:railStudCeilingWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,isolation:byKind("insulation_series").filter(record=>!record.data.category).length?byKind("insulation_series").filter(record=>!record.data.category):defaultCeilingInsulations,regles:railStudCeilingRules,quantitatif:railStudCeilingQuantity},
  },{headers:{"Cache-Control":"no-store"}});
 }

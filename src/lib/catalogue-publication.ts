@@ -2,6 +2,10 @@ import type {ReferenceRecord} from "./plaquisto-data";
 import {paintingRecords, validPaintingRules} from "./painting-data";
 
 const names: Record<string, string> = {
+  "Appuis intermédiaires pour doublage sur fourrure": "Appuis intermédiaires pour fourrures",
+  "Appuis intermédiaires pour doublage sur fourrure — verticaux": "Appuis intermédiaires pour fourrures",
+  "Appuis intermédiaires pour doublage sur fourrure — horizontaux": "Appuis intermédiaires pour fourrures",
+  "Appuis intermédiaires pour doublage sur fourrure — embrasure": "Appuis intermédiaires pour fourrures",
   "Suspente hourdis": "Suspentes hourdis simples",
   "Suspente hourdis à griffe": "Suspentes hourdis simples",
   "Cornière d’angle": "Cornière",
@@ -64,9 +68,18 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
     }
   }
   if (record.id === "RULE-PLAFOND-RAILS-MONTANTS" && Array.isArray(data.supports)) {
-    const supports = data.supports.map(support =>
-      support && typeof support === "object" && typeof support.fixing === "string" && names[support.fixing]
-        ? {...support, fixing: names[support.fixing]} : support);
+    const supports = data.supports.map(support => {
+      if (!support || typeof support !== "object") return support;
+      let next = typeof support.fixing === "string" && names[support.fixing]
+        ? {...support, fixing: names[support.fixing]} : support;
+      if (next.fixing === "Cheville et piton" && next.fixing_components === undefined) {
+        next = {...next, fixing_components: [
+          {name: "Cheville crampon 8 mm", quantity: 1, unit: "unité"},
+          {name: "Piton de suspension 8 mm", quantity: 1, unit: "unité"},
+        ]};
+      }
+      return next;
+    });
     if (supports.some((support, index) => support !== (data.supports as unknown[])[index])) {
       data = {...data, supports};
     }

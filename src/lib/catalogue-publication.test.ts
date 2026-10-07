@@ -4,6 +4,35 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("concrete fixing pair becomes two components without overwriting custom rules", () => {
+  const seed = plaquistoRecords.find(r => r.id === "RULE-PLAFOND-RAILS-MONTANTS")!;
+  const legacy = {...seed, data: {...seed.data, supports: (seed.data.supports as Record<string, unknown>[]).map(s => {
+    const copy = {...s}; delete copy.fixing_components; return copy;
+  })}};
+  const migrated = publishedRecord(legacy);
+  assert.deepEqual(migrated, seed);
+  assert.equal(publishedRecord(migrated), migrated);
+  const custom = {...seed, data: {...seed.data, supports: [{id: "concrete", fixing: "Cheville et piton",
+    fixing_components: [{name: "Fixation spéciale", quantity: 2, unit: "unité"}]}]}};
+  assert.equal(publishedRecord(custom), custom);
+  assert.equal(legacy.data.supports.find(s => s.id === "concrete")?.fixing_components, undefined);
+});
+
+test("furring support aliases preserve coefficients and custom support references", () => {
+  const seed = plaquistoRecords.find(r => r.id === "QTY-DOUBLAGE-LISSES-FOURRURES")!;
+  const old = "Appuis intermédiaires pour doublage sur fourrure";
+  for (const name of [old, `${old} — verticaux`, `${old} — horizontaux`, `${old} — embrasure`]) {
+    const legacy = {...seed, data: {...seed.data, component_names: {
+      ...(seed.data.component_names as Record<string, string>), supports: name}}};
+    const result = publishedRecord(legacy);
+    assert.deepEqual(result, seed);
+    assert.equal(publishedRecord(result), result);
+    assert.equal(legacy.data.component_names.supports, name);
+  }
+  const distinct = {...seed, data: {...seed.data, component_names: {supports: "Appuis pour montants"}}};
+  assert.equal(publishedRecord(distinct), distinct);
+});
+
 test("simple and claw hangers publish the same name without changing fixing rules", () => {
   for (const id of ["FIX-HOURDIS-SEUL", "FIX-HOURDIS-GALVA"]) {
     const seed = plaquistoRecords.find(r => r.id === id)!;

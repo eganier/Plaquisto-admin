@@ -4,6 +4,8 @@ import {paintingRecords, validPaintingRules} from "./painting-data";
 const names: Record<string, string> = {
   "Bande PP grand rouleau": "Bande à joint",
   "Vis TTPC 35 mm (2e parement)": "Vis TTPC 35",
+  "Vis TRPF 13 · solidarisation des montants": "Vis TRPF 13",
+  "Vis TRPF 13 · fixation des suspentes": "Vis TRPF 13",
   "Fourrure F45": "Fourrures F45/F47",
   "Vis TTPC 25 mm (1er parement)": "Vis TTPC 25",
   "Vis TTPC 25 ou 35": "Vis TTPC 25",

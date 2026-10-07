@@ -4,6 +4,22 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("approved TRPF 13 aliases keep usage coefficients and TRPF 25 distinct", () => {
+  const seed = plaquistoRecords.find(r => r.id === "QTY-PLAFOND-RAILS-MONTANTS")!;
+  const legacy = {...seed, data: {...seed.data, component_names: {
+    double_stud_screws: "Vis TRPF 13 · solidarisation des montants",
+    suspension_screws: "Vis TRPF 13 · fixation des suspentes",
+    rail_stud_screws: "Vis TRPF 25 · liaison rail/montant"
+  }}};
+  const result = publishedRecord(legacy);
+  assert.deepEqual(result.data.component_names, {
+    double_stud_screws: "Vis TRPF 13", suspension_screws: "Vis TRPF 13",
+    rail_stud_screws: "Vis TRPF 25 · liaison rail/montant"
+  });
+  assert.deepEqual({...result.data, component_names: undefined}, {...seed.data, component_names: undefined});
+  assert.equal(publishedRecord(result), result);
+});
+
 test("approved TTPC 35 alias keeps coefficients and other screw lengths distinct", () => {
   const seed = plaquistoRecords.find(r => r.id === "QTY-VIS-35")!;
   const result = publishedRecord({...seed, title: "Vis TTPC 35 mm (2e parement)"});

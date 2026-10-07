@@ -4,6 +4,17 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("approved TTPC 35 alias keeps coefficients and other screw lengths distinct", () => {
+  const seed = plaquistoRecords.find(r => r.id === "QTY-VIS-35")!;
+  const result = publishedRecord({...seed, title: "Vis TTPC 35 mm (2e parement)"});
+  assert.equal(result.title, "Vis TTPC 35");
+  assert.deepEqual(result.data, seed.data);
+  for (const title of ["Vis TTPC 25", "Vis TTPC 45", "Vis TTPC 70"]) {
+    const distinct = {...seed, title};
+    assert.equal(publishedRecord(distinct), distinct);
+  }
+});
+
 test("approved joint tape alias keeps each work's coefficients", () => {
   const tape = plaquistoRecords.find(r => r.id === "QTY-BANDE")!;
   const oldTape = {...tape, title: "Bande PP grand rouleau"};

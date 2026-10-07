@@ -253,7 +253,7 @@ export const plaquistoRecords:ReferenceRecord[]=[
   quantityItem("QTY-FIXATION","Fournitures pour système de fixation","unité",[2.20,1.84,1.56,2.20,1.84,1.56]),
   quantityItem("QTY-ECLISSE","Éclisse","unité",[0.25,0.25,0.21,0.25,0.25,0.21]),
   quantityItem("QTY-VIS-25","Vis TTPC 25","unité",[20,17,15,13,11,10]),
-  quantityItem("QTY-VIS-35","Vis TTPC 35 mm (2e parement)","unité",[0,0,0,20,17,15]),
+  quantityItem("QTY-VIS-35","Vis TTPC 35","unité",[0,0,0,20,17,15]),
   quantityItem("QTY-BANDE","Bande à joint","ml",[1.58,1.58,1.58,1.58,1.58,1.58]),
   quantityItem("QTY-ENDUIT-POUDRE","Enduit à joints en poudre","kg",[0.37,0.37,0.37,0.37,0.37,0.37]),
   quantityItem("QTY-ENDUIT-PATE","Enduit à joints en pâte","kg",[0.53,0.53,0.53,0.53,0.53,0.53]),

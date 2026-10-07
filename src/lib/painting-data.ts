@@ -25,16 +25,16 @@ export function validPaintingRules(data: Record<string, unknown>): boolean {
 // Consommations en kg/m²/mm ; rendements peinture en m²/L.
 export const paintingRecords: ReferenceRecord[] = [
   {id:"WORK-PEINTURE-RATISSAGES",kind:"work",title:"Peinture et ratissages",summary:"Préparation par passe, impression et finition, avec réserve de consommables.",sourcePage:0,status:"Publié",data:{code:"peinture-ratissages",family:"Peinture et ratissages"}},
-  {id:"RULE-PEINTURE-RATISSAGES",kind:"rule",title:"Peinture et ratissages · bases de calcul",summary:"Valeurs indicatives. Chaque passe possède son épaisseur et son pourcentage de surface. Airless : +5 % peinture, puis réserve générale +10 %.",sourcePage:0,status:"Publié",data:{
-    category:"painting_rules",schemaVersion:1,revision:"2026-10-07",
-    reservePercent:10,airlessPercent:5,yieldMin:8,yieldMax:12,yieldDefault:10,
+  {id:"RULE-PEINTURE-RATISSAGES",kind:"rule",title:"Peinture et ratissages · bases de calcul",summary:"Chaque passe possède son épaisseur et son pourcentage de surface. Réserve générale +10 %. Impression et finition indépendantes.",sourcePage:0,status:"Publié",data:{
+    category:"painting_rules",schemaVersion:1,revision:"2026-10-07.2",
+    reservePercent:10,airlessPercent:0,yieldMin:8,yieldMax:12,yieldDefault:10,
     compounds:[
-      {id:"rebouchage-poudre",name:"Rebouchage · poudre",kgPerM2MM:1.15,thicknessMin:0.5,thicknessMax:50,thicknessDefault:2},
-      {id:"rebouchage-pate",name:"Rebouchage · pâte",kgPerM2MM:1.5,thicknessMin:0.5,thicknessMax:50,thicknessDefault:2},
-      {id:"charge-poudre",name:"Charge / garnissage · poudre",kgPerM2MM:1.2,thicknessMin:2,thicknessMax:5,thicknessDefault:2},
-      {id:"charge-pate",name:"Charge / garnissage · pâte",kgPerM2MM:1.6,thicknessMin:2,thicknessMax:5,thicknessDefault:2},
-      {id:"finition-poudre",name:"Finition · poudre",kgPerM2MM:0.4,thicknessMin:0.5,thicknessMax:1.5,thicknessDefault:1},
-      {id:"finition-pate",name:"Finition · pâte",kgPerM2MM:1.15,thicknessMin:0.5,thicknessMax:1.5,thicknessDefault:1},
+      {id:"rebouchage-poudre",name:"Rebouchage · poudre",kgPerM2MM:1.15,thicknessMin:10,thicknessMax:50,thicknessDefault:10},
+      {id:"rebouchage-pate",name:"Rebouchage · pâte",kgPerM2MM:1.5,thicknessMin:10,thicknessMax:50,thicknessDefault:10},
+      {id:"charge-poudre",name:"Garnissant · poudre",kgPerM2MM:1.2,thicknessMin:1,thicknessMax:5,thicknessDefault:1},
+      {id:"charge-pate",name:"Garnissant · pâte",kgPerM2MM:1.6,thicknessMin:1,thicknessMax:5,thicknessDefault:1},
+      {id:"finition-poudre",name:"Finition · poudre",kgPerM2MM:0.4,thicknessMin:0.5,thicknessMax:1,thicknessDefault:1},
+      {id:"finition-pate",name:"Finition · pâte",kgPerM2MM:1.15,thicknessMin:0.5,thicknessMax:1,thicknessDefault:1},
     ],
   }},
 ];

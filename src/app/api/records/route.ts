@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {publishedRecord} from "@/lib/catalogue-publication";
 import {validPaintingRules} from "@/lib/painting-data";
 import {createClient} from "@/lib/supabase/server";
 import {genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
@@ -19,6 +20,17 @@ export async function GET(){
   return NextResponse.json({records:plaquistoRecords,storage:"supabase"});
  }
  let current=data;
+ // Persist only the approved publication fields, preserving edited coefficients.
+ for (let index=0;index<current.length;index++) {
+  const row=current[index], record=fromRow(row), published=publishedRecord(record);
+  if(published===record)continue;
+  const fields={title:published.title,summary:published.summary,data:published.data,updated_at:new Date().toISOString()};
+  const {data:updated,error:migrationError}=await supabase.from("reference_records")
+   .update(fields).eq("id",row.id).eq("updated_at",row.updated_at).select("id");
+  if(migrationError)return NextResponse.json({error:migrationError.message},{status:500});
+  if(!updated?.length)return NextResponse.json({error:"Une fiche a changé pendant la publication. Rechargez la page."},{status:409});
+  current[index]={...row,...fields};
+ }
  const legacyFacings=current.filter(row=>row.kind==="facing"&&row.data?.catalog_schema_version!==2);
  if(legacyFacings.length){
   const {error:deleteError}=await supabase.from("reference_records").delete().eq("kind","facing");

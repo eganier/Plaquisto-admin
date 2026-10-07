@@ -13,14 +13,23 @@ Comme les autres familles existantes, le catalogue se replie sur la fiche publi�
 du seed si aucune règle publiée n’est trouvée en base. Aucun déploiement ni aucune
 écriture sur la base de production ne sont effectués par les tests locaux.
 
+Publication du 7 octobre, révision `2026-10-07.2` : les anciennes règles peinture
+et les libellés de fournitures approuvés sont mis à niveau par une transformation
+ciblée commune au catalogue iOS et à Admin. Les coefficients personnalisés sont
+conservés. Le catalogue public applique cette transformation sans écriture ;
+l’ouverture authentifiée d’Admin la persiste en base avec contrôle de concurrence.
+Les révisions futures et les libellés personnalisés ne sont pas remplacés.
+
 ## Unités et calcul
 
 - Enduit, par passe : surface nette × pourcentage/100 × épaisseur en mm ×
   consommation en kg/m²/mm. Les pourcentages sont indépendants (pas de somme à 100 %).
 - Peinture : surface nette × nombre de couches / rendement en **m²/L**.
-- Airless : multiplier uniquement les peintures par `1 + airlessPercent/100` (1,05).
+- Airless retiré du nouveau formulaire (`airlessPercent: 0`, champ conservé pour compatibilité).
 - Réserve : multiplier tous les consommables par `1 + reservePercent/100` (1,10).
-- Au total, peinture Airless = base × 1,155, pas 1,15 et pas 1,21.
+- Impression et finition sont indépendantes, chacune avec un rendement de 8 à 12 m²/L par pas de 1.
+- Rebouchage : 1–5 cm (10–50 mm dans le moteur), garnissant : 1–5 mm, finition : 0,5 ou 1 mm.
+- Les passes sont ajoutées progressivement dans une même étape, sans nombre prédéfini.
 - Agréger les quantités brutes avant l’arrondi d’affichage. Pas d’arrondi en sacs/pots
   sans connaissance du conditionnement du produit.
 

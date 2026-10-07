@@ -1,5 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 import {NextResponse} from "next/server";
+import {publishedRecord} from "@/lib/catalogue-publication";
 import {alveolarFacingRecords,genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
 export const dynamic="force-dynamic";
@@ -10,7 +11,7 @@ export async function GET(){
  const supabase=createClient(url,key,{auth:{persistSession:false}});
  const {data,error}=await supabase.from("reference_records").select("id,kind,title,summary,source_page,status,data,updated_at").eq("status","Publié").order("kind").order("title");
  if(error)return NextResponse.json({error:error.message},{status:500});
- const records=(data||[]).map(row=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data,updatedAt:row.updated_at})) as (ReferenceRecord&{updatedAt:string})[];
+ const records=((data||[]).map(row=>({id:row.id,kind:row.kind,title:row.title,summary:row.summary,sourcePage:row.source_page,status:row.status,data:row.data,updatedAt:row.updated_at})) as (ReferenceRecord&{updatedAt:string})[]).map(publishedRecord);
  const byKind=(kind:ReferenceRecord["kind"])=>records.filter(record=>record.kind===kind);
  const quantityItems=byKind("quantity_item"),vaporBarrier=quantityItems.filter(record=>record.data.category==="vapor_barrier");
  const wallInsulations=byKind("insulation_series").filter(record=>record.data.category==="wall_insulation");

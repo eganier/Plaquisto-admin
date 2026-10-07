@@ -70,7 +70,8 @@ export async function GET(){
  const storedRailStudCeilingQuantity=quantityItems.find(record=>record.data.category==="rail_stud_ceiling_quantity");
  const railStudCeilingQuantity=storedRailStudCeilingQuantity?.data.schema_version===1?storedRailStudCeilingQuantity:seed("QTY-PLAFOND-RAILS-MONTANTS");
  return NextResponse.json({
-  version:"5.0",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"&&record.data.category!=="partition_insulation"),systemesFixation:byKind("fixing_system"),
+  peintureRatissages:{regles:rules.find(record=>record.data.category==="painting_rules")??seed("RULE-PEINTURE-RATISSAGES")},
+  version:"5.1",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"&&record.data.category!=="partition_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
   quantitatifs:quantityItems.filter(record=>!record.data.category),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:[...rules.filter(record=>record.data.category!=="doublage_performance"&&record.data.category!=="sloped_ceiling"),...(slopedCeilingRule?[slopedCeilingRule]:[])],

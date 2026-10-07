@@ -1,3 +1,5 @@
+import {paintingRecords} from "./painting-data";
+
 export type RecordKind = "work" | "insulation_series" | "fixing_system" | "facing" | "quantity_item" | "rule";
 export type RecordStatus = "Publié" | "À valider";
 export type ReferenceRecord = {
@@ -198,6 +200,7 @@ const railStudCeilingSpanTable=[
 ];
 
 export const plaquistoRecords:ReferenceRecord[]=[
+  ...paintingRecords,
   {id:"WORK-PLAFOND-FOURRURE-HORIZONTAL",kind:"work",title:"Plafond sur fourrures horizontal",summary:"Ouvrage de plafond suspendu sur fourrures F45. La configuration détermine l’isolant, le système de fixation et les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"plafond-fourrure-horizontal",fourrure:"F45",source:"Plaquisto_Tableaux_Plafond_fourrure horizontal.numbers"}},
   {id:"WORK-PLAFOND-RAILS-MONTANTS",kind:"work",title:"Plafond sur ossature rails et montants",summary:"Plafond horizontal autoportant ou suspendu, ou plafond rampant autoportant, réalisé avec des rails périphériques et des montants.",sourcePage:1,status:"Publié",data:{code:"plafond-rails-montants",family:"Plafonds",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_Plafond_ossature_rails_montants_calcul_metrique.numbers"}},
   {id:"WORK-DOUBLAGE-PERIPHERIQUE-RAILS-MONTANTS",kind:"work",title:"Doublage périphérique sur rails et montants",summary:"Doublage périphérique sur ossature métallique. L’application vérifie la hauteur admissible et calcule les quantités indicatives.",sourcePage:1,status:"Publié",data:{code:"doublage-peripherique-rails-montants",family:"Doublages périphériques",frame_type:"Rails et montants",source:"Plaquisto_Tableaux_doublage peripherique rails montant.numbers"}},

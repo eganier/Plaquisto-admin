@@ -4,6 +4,29 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("simple and claw hangers publish the same name without changing fixing rules", () => {
+  for (const id of ["FIX-HOURDIS-SEUL", "FIX-HOURDIS-GALVA"]) {
+    const seed = plaquistoRecords.find(r => r.id === id)!;
+    const legacy = {...seed, title: id === "FIX-HOURDIS-SEUL" ? "Suspente hourdis seule" : "Suspente hourdis et suspente galvanisée",
+      data: {...seed.data, components: (seed.data.components as Record<string, unknown>[]).map(c =>
+        c.name === "Suspentes hourdis simples" ? {...c, name: "Suspente hourdis"} : c)}};
+    assert.deepEqual(publishedRecord(legacy), seed);
+  }
+  const rule = plaquistoRecords.find(r => r.id === "RULE-PLAFOND-RAILS-MONTANTS")!;
+  const legacy = {...rule, data: {...rule.data, supports: (rule.data.supports as Record<string, unknown>[]).map(s =>
+    s.id === "concrete_hollow_block" ? {...s, fixing: "Suspente hourdis à griffe"} : s)}};
+  assert.deepEqual(publishedRecord(legacy), rule);
+  const clamping = plaquistoRecords.find(r => r.id === "FIX-HOURDIS-GRIFFE-TIGE")!;
+  assert.equal(publishedRecord(clamping), clamping);
+});
+
+test("ceiling angle is renamed without changing its coefficients", () => {
+  const seed = plaquistoRecords.find(r => r.id === "QTY-CORNIERE")!;
+  assert.deepEqual(publishedRecord({...seed, title: "Cornière d’angle"}), seed);
+  const modular = {...seed, title: "Cornières de rive de 3,00 m"};
+  assert.equal(publishedRecord(modular), modular);
+});
+
 test("clamping hangers are renamed but remain distinct from claw and plain hangers", () => {
   for (const id of ["FIX-HOURDIS-GRIFFE-GALVA", "FIX-HOURDIS-GRIFFE-TIGE"]) {
     const seed = plaquistoRecords.find(r => r.id === id)!;

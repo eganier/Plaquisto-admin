@@ -2,6 +2,10 @@ import type {ReferenceRecord} from "./plaquisto-data";
 import {paintingRecords, validPaintingRules} from "./painting-data";
 
 const names: Record<string, string> = {
+  "Suspente hourdis": "Suspentes hourdis simples",
+  "Suspente hourdis à griffe": "Suspentes hourdis simples",
+  "Cornière d’angle": "Cornière",
+  "Cornière d'angle": "Cornière",
   "Bande PP grand rouleau": "Bande à joint",
   "Demi collier": "Demi-collier",
   "Vis TTPC 35 mm (2e parement)": "Vis TTPC 35",
@@ -48,10 +52,21 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
       }
     }
   }
+  if (record.kind === "fixing_system") {
+    if (record.id === "FIX-HOURDIS-SEUL" && title === "Suspente hourdis seule") title = "Suspentes hourdis simples";
+    if (record.id === "FIX-HOURDIS-GALVA" && title === "Suspente hourdis et suspente galvanisée") title = "Suspentes hourdis simples et suspente galvanisée";
+    if (Array.isArray(data.components)) {
+      const components = data.components.map(component => {
+        const name = component && typeof component === "object" ? component.name : undefined;
+        return typeof name === "string" && names[name] ? {...component, name: names[name]} : component;
+      });
+      if (components.some((component, index) => component !== (data.components as unknown[])[index])) data = {...data, components};
+    }
+  }
   if (record.id === "RULE-PLAFOND-RAILS-MONTANTS" && Array.isArray(data.supports)) {
     const supports = data.supports.map(support =>
-      support && typeof support === "object" && support.fixing === "Demi collier"
-        ? {...support, fixing: "Demi-collier"} : support);
+      support && typeof support === "object" && typeof support.fixing === "string" && names[support.fixing]
+        ? {...support, fixing: names[support.fixing]} : support);
     if (supports.some((support, index) => support !== (data.supports as unknown[])[index])) {
       data = {...data, supports};
     }

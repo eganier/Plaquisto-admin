@@ -4,6 +4,20 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("approved joint tape alias keeps each work's coefficients", () => {
+  const tape = plaquistoRecords.find(r => r.id === "QTY-BANDE")!;
+  const oldTape = {...tape, title: "Bande PP grand rouleau"};
+  const migrated = publishedRecord(oldTape);
+  assert.equal(migrated.title, "Bande à joint");
+  assert.deepEqual(migrated.data, tape.data);
+  const alveolar = plaquistoRecords.find(r => r.id === "QTY-CLOISON-ALVEOLAIRE")!;
+  const old = {...alveolar, data: {...alveolar.data, component_names: {band: "Bande PP grand rouleau"}}};
+  const result = publishedRecord(old);
+  assert.equal(result.data.component_names.band, "Bande à joint");
+  assert.deepEqual({...result.data, component_names: undefined}, {...alveolar.data, component_names: undefined});
+  assert.equal(publishedRecord(result), result);
+});
+
 test("publication upgrades legacy painting without changing custom coefficients", () => {
   const seed = paintingRecords.find(r => r.id === "RULE-PEINTURE-RATISSAGES")!;
   const legacy = {...seed, data: {...seed.data, revision: "2026-10-07", airlessPercent: 5,

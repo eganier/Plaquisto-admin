@@ -2,6 +2,7 @@ import type {ReferenceRecord} from "./plaquisto-data";
 import {paintingRecords, validPaintingRules} from "./painting-data";
 
 const names: Record<string, string> = {
+  "Bande PP grand rouleau": "Bande à joint",
   "Fourrure F45": "Fourrures F45/F47",
   "Vis TTPC 25 mm (1er parement)": "Vis TTPC 25",
   "Vis TTPC 25 ou 35": "Vis TTPC 25",

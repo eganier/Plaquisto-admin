@@ -32,6 +32,22 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
       if (JSON.stringify(renamed) !== JSON.stringify(components)) data = {...data, component_names: renamed};
     }
   }
+  if (record.kind === "fixing_system" &&
+      ["FIX-HOURDIS-GRIFFE-GALVA", "FIX-HOURDIS-GRIFFE-TIGE"].includes(record.id)) {
+    const titles: Record<string, string> = {
+      "Suspente hourdis à griffe et suspente galvanisée": "Suspente hourdis à serrer et suspente galvanisée",
+      "Suspente hourdis à griffe, tige filetée et cavalier": "Suspente hourdis à serrer, tige filetée et cavalier",
+    };
+    title = titles[title] ?? title;
+    if (Array.isArray(data.components)) {
+      const components = data.components.map(component =>
+        component && typeof component === "object" && component.name === "Suspente hourdis à griffe à serrer"
+          ? {...component, name: "Suspente hourdis à serrer"} : component);
+      if (components.some((component, index) => component !== (data.components as unknown[])[index])) {
+        data = {...data, components};
+      }
+    }
+  }
   if (record.id === "RULE-PLAFOND-RAILS-MONTANTS" && Array.isArray(data.supports)) {
     const supports = data.supports.map(support =>
       support && typeof support === "object" && support.fixing === "Demi collier"

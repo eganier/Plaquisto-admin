@@ -4,6 +4,23 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("clamping hangers are renamed but remain distinct from claw and plain hangers", () => {
+  for (const id of ["FIX-HOURDIS-GRIFFE-GALVA", "FIX-HOURDIS-GRIFFE-TIGE"]) {
+    const seed = plaquistoRecords.find(r => r.id === id)!;
+    const legacy = {...seed, title: seed.title.replace("à serrer", "à griffe"), data: {...seed.data,
+      components: (seed.data.components as Record<string, unknown>[]).map(c =>
+        c.name === "Suspente hourdis à serrer" ? {...c, name: "Suspente hourdis à griffe à serrer"} : c)}};
+    const result = publishedRecord(legacy);
+    assert.deepEqual(result, seed);
+    assert.equal(publishedRecord(result), result);
+    assert.ok(legacy.data.components.some(c => c.name === "Suspente hourdis à griffe à serrer"));
+  }
+  for (const id of ["RULE-PLAFOND-RAILS-MONTANTS", "FIX-HOURDIS-SEUL", "FIX-HOURDIS-GALVA"]) {
+    const record = plaquistoRecords.find(r => r.id === id)!;
+    assert.equal(publishedRecord(record), record);
+  }
+});
+
 test("half clamp spelling migration changes only the approved fixing name", () => {
   const seed = plaquistoRecords.find(r => r.id === "RULE-PLAFOND-RAILS-MONTANTS")!;
   const supports = (seed.data.supports as Record<string, unknown>[]).map(s =>

@@ -243,8 +243,8 @@ export const plaquistoRecords:ReferenceRecord[]=[
   fixingSystem("FIX-CREUX-TIGE","Cheville à bascule, tige filetée et cavalier","Plafond creux",20,1000,[fixed("Cheville à bascule"),rod(),fixed("Cavalier pivot")]),
   fixingSystem("FIX-HOURDIS-SEUL","Suspente hourdis seule","Plancher hourdis béton",20,40,[fixed("Suspente hourdis")]),
   fixingSystem("FIX-HOURDIS-GALVA","Suspente hourdis et suspente galvanisée","Plancher hourdis béton",20,480,[fixed("Suspente hourdis"),fixed("Suspente acier galvanisé")]),
-  fixingSystem("FIX-HOURDIS-GRIFFE-GALVA","Suspente hourdis à griffe et suspente galvanisée","Plancher hourdis béton",60,480,[fixed("Suspente hourdis à griffe à serrer"),fixed("Suspente acier galvanisé")]),
-  fixingSystem("FIX-HOURDIS-GRIFFE-TIGE","Suspente hourdis à griffe, tige filetée et cavalier","Plancher hourdis béton",60,1000,[fixed("Suspente hourdis à griffe à serrer"),rod(),fixed("Cavalier pivot")]),
+  fixingSystem("FIX-HOURDIS-GRIFFE-GALVA","Suspente hourdis à serrer et suspente galvanisée","Plancher hourdis béton",60,480,[fixed("Suspente hourdis à serrer"),fixed("Suspente acier galvanisé")]),
+  fixingSystem("FIX-HOURDIS-GRIFFE-TIGE","Suspente hourdis à serrer, tige filetée et cavalier","Plancher hourdis béton",60,1000,[fixed("Suspente hourdis à serrer"),rod(),fixed("Cavalier pivot")]),
   fixingSystem("FIX-METAL-TIGE","Suspente bord de tôle, tige filetée et cavalier","Charpente métallique",20,1000,[fixed("Suspente bord de tôle"),rod(),fixed("Cavalier pivot")]),
 
   quantityItem("QTY-PLAQUE","Plaque BA13","m²",[1.05,1.05,1.05,2.10,2.10,2.10]),

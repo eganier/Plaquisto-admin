@@ -4,6 +4,18 @@ import {publishedRecord} from "./catalogue-publication";
 import {paintingRecords} from "./painting-data";
 import {plaquistoRecords} from "./plaquisto-data";
 
+test("half clamp spelling migration changes only the approved fixing name", () => {
+  const seed = plaquistoRecords.find(r => r.id === "RULE-PLAFOND-RAILS-MONTANTS")!;
+  const supports = (seed.data.supports as Record<string, unknown>[]).map(s =>
+    s.id === "wood" ? {...s, fixing: "Demi collier"} : s);
+  const legacy = {...seed, data: {...seed.data, supports}};
+  const result = publishedRecord(legacy);
+  assert.equal(result.data.supports.find(s => s.id === "wood")?.fixing, "Demi-collier");
+  assert.deepEqual(result.data, seed.data);
+  assert.equal(legacy.data.supports.find(s => s.id === "wood")?.fixing, "Demi collier");
+  assert.equal(publishedRecord(result), result);
+});
+
 test("approved TRPF 13 aliases keep usage coefficients and TRPF 25 distinct", () => {
   const seed = plaquistoRecords.find(r => r.id === "QTY-PLAFOND-RAILS-MONTANTS")!;
   const legacy = {...seed, data: {...seed.data, component_names: {

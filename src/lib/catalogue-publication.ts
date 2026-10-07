@@ -3,6 +3,7 @@ import {paintingRecords, validPaintingRules} from "./painting-data";
 
 const names: Record<string, string> = {
   "Bande PP grand rouleau": "Bande à joint",
+  "Demi collier": "Demi-collier",
   "Vis TTPC 35 mm (2e parement)": "Vis TTPC 35",
   "Vis TRPF 13 · solidarisation des montants": "Vis TRPF 13",
   "Vis TRPF 13 · fixation des suspentes": "Vis TRPF 13",
@@ -29,6 +30,14 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
       const renamed = Object.fromEntries(Object.entries(components).map(([key, value]) =>
         [key, typeof value === "string" ? names[value] ?? value : value]));
       if (JSON.stringify(renamed) !== JSON.stringify(components)) data = {...data, component_names: renamed};
+    }
+  }
+  if (record.id === "RULE-PLAFOND-RAILS-MONTANTS" && Array.isArray(data.supports)) {
+    const supports = data.supports.map(support =>
+      support && typeof support === "object" && support.fixing === "Demi collier"
+        ? {...support, fixing: "Demi-collier"} : support);
+    if (supports.some((support, index) => support !== (data.supports as unknown[])[index])) {
+      data = {...data, supports};
     }
   }
   if (record.id === "RULE-PEINTURE-RATISSAGES" && data.revision === "2026-10-07" && validPaintingRules(data)) {

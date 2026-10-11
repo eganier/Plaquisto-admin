@@ -74,7 +74,7 @@ export async function GET(){
   peintureRatissages:{regles:rules.find(record=>record.data.category==="painting_rules")??seed("RULE-PEINTURE-RATISSAGES")},
   version:"5.1",ouvrage:ceilingWork,isolation:byKind("insulation_series").filter(record=>record.data.category!=="wall_insulation"&&record.data.category!=="partition_insulation"),systemesFixation:byKind("fixing_system"),
   parements:genericFacings.length?genericFacings:defaultDoublageFacings,
-  quantitatifs:quantityItems.filter(record=>!record.data.category||record.data.category==="galvanized_hanger"),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
+  quantitatifs:quantityItems.filter(record=>!record.data.category||["galvanized_hanger","composite_hanger"].includes(String(record.data.category))),pareVapeur:vaporBarrier.length?vaporBarrier:defaultVaporBarrier,
   regles:[...rules.filter(record=>record.data.category!=="doublage_performance"&&record.data.category!=="sloped_ceiling"),...(slopedCeilingRule?[slopedCeilingRule]:[])],
   doublage:{ouvrage:doublageWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:doublagePerformance,quantitatif:doublageQuantity,isolants:wallInsulations.length?wallInsulations:defaultWallInsulations},
   cloisonDistribution:{ouvrage:partitionWork,parements:genericFacings.length?genericFacings:defaultDoublageFacings,performance:partitionPerformance,quantitatif:partitionQuantity,isolants:partitionInsulations.length?partitionInsulations:defaultPartitionInsulations},

@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {publishedRecord} from "@/lib/catalogue-publication";
 import {validPaintingRules} from "@/lib/painting-data";
 import {hangerValidationError} from "@/lib/galvanized-hangers";
+import {compositeHangerValidationError} from "@/lib/composite-hangers";
 import {createClient} from "@/lib/supabase/server";
 import {genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
@@ -80,10 +81,11 @@ async function saveRecord(request:Request, create:boolean) {
  if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});
  const record=await request.json() as ReferenceRecord;
  if((record.id==="RULE-PEINTURE-RATISSAGES"||record.data.category==="painting_rules")&&!validPaintingRules(record.data))return NextResponse.json({error:"Bases peinture invalides : vérifiez les rendements, consommations et épaisseurs."},{status:400});
- if(record.data.category==="galvanized_hanger") {
-  const {data,error}=await supabase.from("reference_records").select("*").eq("data->>category","galvanized_hanger");
+ if(["galvanized_hanger","composite_hanger"].includes(String(record.data.category))) {
+  const {data,error}=await supabase.from("reference_records").select("*").eq("data->>category",record.data.category);
   if(error)return NextResponse.json({error:"Lecture des suspentes impossible."},{status:503});
-  const validation=hangerValidationError(record,(data??[]).map(fromRow));
+  const others=(data??[]).map(fromRow);
+  const validation=hangerValidationError(record,others)??compositeHangerValidationError(record,others);
   if(validation)return NextResponse.json({error:validation},{status:400});
  }
  const result=create ? await supabase.from("reference_records").insert(toRow(record))

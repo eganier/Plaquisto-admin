@@ -57,6 +57,12 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
     }
   }
   if (record.kind === "fixing_system") {
+    if (record.id === "FIX-BOIS-PARE-VAPEUR" && Array.isArray(data.components)) {
+      const components = data.components.map(component =>
+        component && typeof component === "object" && component.name === "Suspente composite pour pare-vapeur"
+          && component.selection === undefined ? {...component, selection: "composite_hanger"} : component);
+      if (components.some((component, index) => component !== (data.components as unknown[])[index])) data = {...data, components};
+    }
     if (["FIX-BOIS-GALVA", "FIX-HOURDIS-GALVA", "FIX-HOURDIS-GRIFFE-GALVA"].includes(record.id)
         && Array.isArray(data.components)) {
       const components = data.components.map(component =>

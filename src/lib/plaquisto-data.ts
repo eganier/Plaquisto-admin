@@ -1,6 +1,7 @@
 import {paintingRecords} from "./painting-data";
 import {galvanizedHangerRecords} from "./galvanized-hangers";
 import {compositeHangerRecords} from "./composite-hangers";
+import {intermediateSupportRecords} from "./intermediate-supports";
 
 export type RecordKind = "work" | "insulation_series" | "fixing_system" | "facing" | "quantity_item" | "rule";
 export type RecordStatus = "Publié" | "À valider";
@@ -240,6 +241,7 @@ export const plaquistoRecords:ReferenceRecord[]=[
 
   ...galvanizedHangerRecords,
   ...compositeHangerRecords,
+  ...intermediateSupportRecords,
   fixingSystem("FIX-BOIS-GALVA","Suspente acier galvanisé","Plancher bois horizontal",20,570,[fixed("Vis TTPC 35",2),fixed("Suspente acier galvanisé")],{maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-PARE-VAPEUR","Suspente composite pour pare-vapeur","Plancher bois horizontal",20,280,[fixed("Vis TTPC 35",2),fixed("Suspente composite pour pare-vapeur")],{pareVapeur:true,maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-TIGE","Demi-collier, tige filetée et cavalier","Plancher bois horizontal",20,1000,[fixed("Vis TTPC 35",2),fixed("Demi-collier"),rod(),fixed("Cavalier pivot")],{maxInsulation:15,maxExclusive:false}),

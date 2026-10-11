@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {publishedRecord} from "@/lib/catalogue-publication";
 import {validPaintingRules} from "@/lib/painting-data";
+import {hangerValidationError} from "@/lib/galvanized-hangers";
 import {createClient} from "@/lib/supabase/server";
 import {genericFacingRecords,plaquistoRecords,type ReferenceRecord} from "@/lib/plaquisto-data";
 
@@ -74,6 +75,22 @@ export async function GET(){
 }
 
 export async function POST(){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {error}=await supabase.from("reference_records").upsert(plaquistoRecords.map(toRow));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({count:plaquistoRecords.length})}
-export async function PATCH(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const record=await request.json() as ReferenceRecord;if((record.id==="RULE-PEINTURE-RATISSAGES"||record.data.category==="painting_rules")&&!validPaintingRules(record.data))return NextResponse.json({error:"Bases peinture invalides : vérifiez les rendements, consommations et épaisseurs."},{status:400});const {error}=await supabase.from("reference_records").update({title:record.title,summary:record.summary,status:record.status,data:record.data,updated_at:new Date().toISOString()}).eq("id",record.id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}
-export async function PUT(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const record=await request.json() as ReferenceRecord;if((record.id==="RULE-PEINTURE-RATISSAGES"||record.data.category==="painting_rules")&&!validPaintingRules(record.data))return NextResponse.json({error:"Bases peinture invalides : vérifiez les rendements, consommations et épaisseurs."},{status:400});const {error}=await supabase.from("reference_records").insert(toRow(record));if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({record})}
+async function saveRecord(request:Request, create:boolean) {
+ const {supabase,ok}=await auth();
+ if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});
+ const record=await request.json() as ReferenceRecord;
+ if((record.id==="RULE-PEINTURE-RATISSAGES"||record.data.category==="painting_rules")&&!validPaintingRules(record.data))return NextResponse.json({error:"Bases peinture invalides : vérifiez les rendements, consommations et épaisseurs."},{status:400});
+ if(record.data.category==="galvanized_hanger") {
+  const {data,error}=await supabase.from("reference_records").select("*").eq("data->>category","galvanized_hanger");
+  if(error)return NextResponse.json({error:"Lecture des suspentes impossible."},{status:503});
+  const validation=hangerValidationError(record,(data??[]).map(fromRow));
+  if(validation)return NextResponse.json({error:validation},{status:400});
+ }
+ const result=create ? await supabase.from("reference_records").insert(toRow(record))
+  : await supabase.from("reference_records").update({title:record.title,summary:record.summary,status:record.status,data:record.data,updated_at:new Date().toISOString()}).eq("id",record.id);
+ if(result.error)return NextResponse.json({error:result.error.message},{status:400});
+ return NextResponse.json(create?{record}:{ok:true});
+}
+export async function PATCH(request:Request){return saveRecord(request,false)}
+export async function PUT(request:Request){return saveRecord(request,true)}
 export async function DELETE(request:Request){const {supabase,ok}=await auth();if(!ok)return NextResponse.json({error:"Non autorisé"},{status:401});const {id}=await request.json() as {id?:string};if(!id)return NextResponse.json({error:"Identifiant invalide"},{status:400});const {error}=await supabase.from("reference_records").delete().eq("id",id);if(error)return NextResponse.json({error:error.message},{status:400});return NextResponse.json({ok:true})}

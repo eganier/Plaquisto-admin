@@ -1,4 +1,5 @@
 import {paintingRecords} from "./painting-data";
+import {galvanizedHangerRecords} from "./galvanized-hangers";
 
 export type RecordKind = "work" | "insulation_series" | "fixing_system" | "facing" | "quantity_item" | "rule";
 export type RecordStatus = "Publié" | "À valider";
@@ -14,7 +15,7 @@ export type ReferenceRecord = {
 
 export type InsulationPoint = {thickness_mm:number;max_weight_kg_m2:number};
 export type WallInsulationLambda = {lambda_w_mk:number;thicknesses_mm:number[]};
-export type FixingComponent = {name:string;quantity:number;unit:"unité"|"ml";calculation:"fixed"|"plenum_m"};
+export type FixingComponent = {name:string;quantity:number;unit:"unité"|"ml";calculation:"fixed"|"plenum_m";selection?:"galvanized_hanger"};
 export type FacingDimension = {width_mm:number;length_mm:number};
 export type FacingFunction = "standard"|"hydrofuge"|"incendie"|"phonique"|"haute_durete"|"quatre_bords_amincis"|"tres_haute_resistance_eau";
 export type VaporBarrierComponent = {
@@ -72,7 +73,7 @@ const fixingSystem = (
   data:{support,plenum_min_mm:min,plenum_max_mm:max,pare_vapeur_compatible:options.pareVapeur??false,max_insulation_kg_m2:options.maxInsulation??15,max_insulation_exclusive:options.maxExclusive??false,components},
 });
 
-const fixed = (name:string,quantity=1):FixingComponent => ({name,quantity,unit:"unité",calculation:"fixed"});
+const fixed = (name:string,quantity=1):FixingComponent => ({name,quantity,unit:"unité",calculation:"fixed",...(name==="Suspente acier galvanisé"?{selection:"galvanized_hanger" as const}:{})});
 const rod = ():FixingComponent => ({name:"Tige filetée Ø 6 mm",quantity:1,unit:"ml",calculation:"plenum_m"});
 
 const quantityItem = (id:string,title:string,unit:string,values:number[]):ReferenceRecord => ({
@@ -236,14 +237,15 @@ export const plaquistoRecords:ReferenceRecord[]=[
   partitionInsulationSeries("PARTITION-INSULATION-BIO","BIO","Biosourcé · chanvre, lin, coton",0.038,[40,60,80,100]),
   partitionInsulationSeries("PARTITION-INSULATION-BOIS","BOIS","Laine de bois",0.036,[40,50,60,80,100],true),
 
-  fixingSystem("FIX-BOIS-GALVA","Suspente acier galvanisé","Plancher bois horizontal",20,480,[fixed("Vis TTPC 35",2),fixed("Suspente acier galvanisé")],{maxInsulation:15,maxExclusive:false}),
+  ...galvanizedHangerRecords,
+  fixingSystem("FIX-BOIS-GALVA","Suspente acier galvanisé","Plancher bois horizontal",20,570,[fixed("Vis TTPC 35",2),fixed("Suspente acier galvanisé")],{maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-PARE-VAPEUR","Suspente composite pour pare-vapeur","Plancher bois horizontal",20,280,[fixed("Vis TTPC 35",2),fixed("Suspente composite pour pare-vapeur")],{pareVapeur:true,maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BOIS-TIGE","Demi-collier, tige filetée et cavalier","Plancher bois horizontal",20,1000,[fixed("Vis TTPC 35",2),fixed("Demi-collier"),rod(),fixed("Cavalier pivot")],{maxInsulation:15,maxExclusive:false}),
   fixingSystem("FIX-BETON-TIGE","Cheville, piton, tige filetée et cavalier","Dalle béton",20,1000,[fixed("Cheville crampon 8 mm"),fixed("Piton de suspension 8 mm"),rod(),fixed("Cavalier pivot")]),
   fixingSystem("FIX-CREUX-TIGE","Cheville à bascule, tige filetée et cavalier","Plafond creux",20,1000,[fixed("Cheville à bascule"),rod(),fixed("Cavalier pivot")]),
   fixingSystem("FIX-HOURDIS-SEUL","Suspentes hourdis simples","Plancher hourdis béton",20,40,[fixed("Suspentes hourdis simples")]),
-  fixingSystem("FIX-HOURDIS-GALVA","Suspentes hourdis simples et suspente galvanisée","Plancher hourdis béton",20,480,[fixed("Suspentes hourdis simples"),fixed("Suspente acier galvanisé")]),
-  fixingSystem("FIX-HOURDIS-GRIFFE-GALVA","Suspente hourdis à serrer et suspente galvanisée","Plancher hourdis béton",60,480,[fixed("Suspente hourdis à serrer"),fixed("Suspente acier galvanisé")]),
+  fixingSystem("FIX-HOURDIS-GALVA","Suspentes hourdis simples et suspente galvanisée","Plancher hourdis béton",20,590,[fixed("Suspentes hourdis simples"),fixed("Suspente acier galvanisé")]),
+  fixingSystem("FIX-HOURDIS-GRIFFE-GALVA","Suspente hourdis à serrer et suspente galvanisée","Plancher hourdis béton",60,590,[fixed("Suspente hourdis à serrer"),fixed("Suspente acier galvanisé")]),
   fixingSystem("FIX-HOURDIS-GRIFFE-TIGE","Suspente hourdis à serrer, tige filetée et cavalier","Plancher hourdis béton",60,1000,[fixed("Suspente hourdis à serrer"),rod(),fixed("Cavalier pivot")]),
   fixingSystem("FIX-METAL-TIGE","Suspente bord de tôle, tige filetée et cavalier","Charpente métallique",20,1000,[fixed("Suspente bord de tôle"),rod(),fixed("Cavalier pivot")]),
 

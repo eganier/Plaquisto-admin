@@ -45,7 +45,7 @@ export function priceTargets(records: ReferenceRecord[] = plaquistoRecords): Pri
           `${record.title} · λ ${lambda_w_mk.toFixed(3)} · ${thickness} mm`, "m²"));
       });
     }
-    if (record.kind !== "quantity_item" || record.data.category || ["QTY-FIXATION", "QTY-PLAQUE"].includes(record.id)) return [];
+    if (record.kind !== "quantity_item" || (record.data.category && record.data.category !== "galvanized_hanger") || ["QTY-FIXATION", "QTY-PLAQUE"].includes(record.id)) return [];
     const unit = record.data.unit as PriceUnit;
     if (!units.includes(unit)) return [];
     const variants:Record<string,string[]> = {

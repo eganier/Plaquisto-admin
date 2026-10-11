@@ -57,6 +57,18 @@ export function publishedRecord<T extends ReferenceRecord>(record: T): T {
     }
   }
   if (record.kind === "fixing_system") {
+    if (["FIX-BOIS-GALVA", "FIX-HOURDIS-GALVA", "FIX-HOURDIS-GRIFFE-GALVA"].includes(record.id)
+        && Array.isArray(data.components)) {
+      const components = data.components.map(component =>
+        component && typeof component === "object" && component.name === "Suspente acier galvanisé"
+          && component.selection === undefined ? {...component, selection: "galvanized_hanger"} : component);
+      // Migrate only the former default range; preserve administrator overrides.
+      if (components.some((component, index) => component !== (data.components as unknown[])[index])) {
+        const maximum = record.id === "FIX-BOIS-GALVA" ? 570 : 590;
+        if (data.plenum_max_mm === 480 && summary.includes("à 480 mm")) summary = summary.replace("à 480 mm", `à ${maximum} mm`);
+        data = {...data, components, ...(data.plenum_max_mm === 480 ? {plenum_max_mm: maximum} : {})};
+      }
+    }
     if (record.id === "FIX-HOURDIS-SEUL" && title === "Suspente hourdis seule") title = "Suspentes hourdis simples";
     if (record.id === "FIX-HOURDIS-GALVA" && title === "Suspente hourdis et suspente galvanisée") title = "Suspentes hourdis simples et suspente galvanisée";
     if (Array.isArray(data.components)) {
